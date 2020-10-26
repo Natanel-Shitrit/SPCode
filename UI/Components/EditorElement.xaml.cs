@@ -137,7 +137,7 @@ namespace SPCode.UI.Components
 
             colorizeSelection = new ColorizeSelection();
             editor.TextArea.TextView.LineTransformers.Add(colorizeSelection);
-            editor.SyntaxHighlighting = new AeonEditorHighlighting();
+            ParseIncludes(null, null);
 
             LoadAutoCompletes();
 
@@ -630,6 +630,8 @@ namespace SPCode.UI.Components
             NeedsSave = true;
         }
 
+        private Timer parseTimer;
+
         private void Caret_PositionChanged(object sender, EventArgs e)
         {
             StatusLine_Coloumn.Text = $"{Program.Translations.GetLanguage("ColAbb")} {editor.TextArea.Caret.Column}";
@@ -640,22 +642,32 @@ namespace SPCode.UI.Components
 
             
             if (!Program.OptionsObject.Program_DynamicISAC || Program.MainWindow == null) return;
-            /*
-            Debug.WriteLineIf(lastParsing != null, $"Diffrence: {DateTime.Now - lastParsing}");
-            if (lastParsing != null && DateTime.Now - lastParsing < new TimeSpan(0, 0, 2))
-                return;
 
-            lastParsing = DateTime.Now;
-
-            Debug.WriteLine("Reparsing");
-            */
-            var ee = Program.MainWindow.GetAllEditorElements();
-            var ce = Program.MainWindow.GetCurrentEditorElement();
-
-            var caret = -1;
-
-            if (ee != null)
+            if (parseTimer != null)
             {
+                parseTimer.Enabled = false;
+                parseTimer.Close();
+            }
+
+            parseTimer = new Timer(200)
+            {
+                AutoReset = false,
+                Enabled = true,
+            };
+            parseTimer.Elapsed += ParseIncludes;
+        }
+
+        private void ParseIncludes(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var ee = Program.MainWindow.GetAllEditorElements();
+                var ce = Program.MainWindow.GetCurrentEditorElement();
+                
+                var caret = -1;
+
+                if (ee == null) return;
+
                 var definitions = new SMDefinition[ee.Length];
                 List<SMFunction> currentFunctions = null;
                 for (var i = 0; i < ee.Length; ++i)
@@ -687,6 +699,7 @@ namespace SPCode.UI.Components
 
                 // Lags the hell out when typing a lot.
                 ce.editor.SyntaxHighlighting = new AeonEditorHighlighting(smDef);
+
                 foreach (var el in ee)
                 {
                     if (el == ce)
@@ -699,7 +712,7 @@ namespace SPCode.UI.Components
                     el.InterruptLoadAutoCompletes(smDef.FunctionStrings, smFunctions, acNodes,
                         isNodes, smDef.Methodmaps.ToArray(), smDef.Variables.ToArray());
                 }
-            }
+            });
         }
 
         private void TextArea_TextEntered(object sender, TextCompositionEventArgs e)
