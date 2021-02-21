@@ -53,17 +53,13 @@ namespace SPCodeUpdater
 
             using (var archive = ZipFile.Open(zipInfo.FullName, ZipArchiveMode.Update))
             {
-                string fullPath, directory;
                 // Dont override the sourcemod files
                 foreach (var entry in archive.Entries)
                 {
                     if (!entry.FullName.StartsWith(@"sourcepawn\"))
                     {
-                        fullPath = "Update\\" + entry.FullName;
-                        directory = Path.GetDirectoryName(fullPath);
-
-                        Directory.CreateDirectory(directory);
-                        entry.ExtractToFile(fullPath, true);
+                        Directory.CreateDirectory(Path.GetDirectoryName(entry.FullName));
+                        entry.ExtractToFile(entry.FullName, true);
                     }
                 }
             }
