@@ -51,7 +51,7 @@ namespace SPCodeUpdater
 
             var zipInfo = new FileInfo(zipFile);
 
-            using (var archive = ZipFile.Open(zipInfo.FullName, ZipArchiveMode.Update))
+            using (var archive = ZipFile.OpenRead(zipInfo.FullName))
             {
                 // Dont override the sourcemod files
                 foreach (var entry in archive.Entries)
