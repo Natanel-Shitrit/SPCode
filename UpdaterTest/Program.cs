@@ -43,13 +43,20 @@ namespace UpdaterTest
             }
 
             Directory.CreateDirectory("Update");
-            var zip = ZipFile.OpenRead("Update.zip");
+            var zip = ZipFile.Open("Update.zip", ZipArchiveMode.Update);
 
+            string fullPath, directory;
             // Dont override the sourcemod files
-            var files = zip.Entries.Where(e => !e.FullName.StartsWith(@"sourcepawn\"));
-            foreach (var file in files)
+            foreach (var entry in zip.Entries)
             {
-                file.ExtractToFile("Update/" + file.FullName, true);
+                if (!entry.FullName.StartsWith(@"sourcepawn\"))
+                {
+                    fullPath = "Update\\" + entry.FullName;
+                    directory = Path.GetDirectoryName(fullPath);
+
+                    Directory.CreateDirectory(directory);
+                    entry.ExtractToFile(fullPath, true);
+                }
             }
         }
         /*
