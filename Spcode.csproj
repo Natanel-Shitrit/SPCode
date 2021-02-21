@@ -65,10 +65,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ByteSize, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\ByteSize.2.0.0\lib\net45\ByteSize.dll</HintPath>
+    </Reference>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, PublicKeyToken=null">
       <HintPath>packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="CustomMarshalers" />
     <Reference Include="DiscordRPC, Version=1.0.150.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>packages\DiscordRichPresence.1.0.150\lib\net35\DiscordRPC.dll</HintPath>
       <Private>True</Private>
@@ -82,13 +86,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>packages\Windows7APICodePack-Core.1.1.0.0\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.4.0, Culture=neutral, PublicKeyToken=8985beaab7ea3f04, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft-WindowsAPICodePack-Core.1.1.4\lib\net48\Microsoft.WindowsAPICodePack.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>packages\Windows7APICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.4.0, Culture=neutral, PublicKeyToken=8985beaab7ea3f04, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft-WindowsAPICodePack-Shell.1.1.4\lib\net48\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -111,6 +113,7 @@
       <HintPath>App\smxdasm.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
@@ -121,7 +124,9 @@
     </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
+    <Reference Include="UIAutomationProvider" />
     <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
     <Reference Include="Xceed.Wpf.AvalonDock, Version=2.9.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>packages\Extended.Wpf.Toolkit.2.9\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
       <Private>True</Private>
@@ -149,11 +154,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
     <Compile Include="UI\Components\ColorChangeControl.xaml.cs">
       <DependentUpon>ColorChangeControl.xaml</DependentUpon>
     </Compile>
@@ -167,7 +167,7 @@
     <Compile Include="UI\Components\DASMElementHighlighter.cs" />
     <Compile Include="UI\Components\EditorElementHighlighter.cs" />
     <Compile Include="UI\Components\EditorFoldingStrategy.cs" />
-    <Compile Include="UI\Components\EditorIndetation.cs" />
+    <Compile Include="UI\Components\EditorIndentation.cs" />
     <Compile Include="UI\Components\IntelliSenseController.cs" />
     <Compile Include="UI\Interop\LanguageChooserWindow.xaml.cs">
       <DependentUpon>LanguageChooserWindow.xaml</DependentUpon>
@@ -201,6 +201,9 @@
     <Compile Include="UI\Windows\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utils\Constants.cs" />
+    <Compile Include="Utils\JavaUtils.cs" />
+    <Compile Include="Utils\Paths.cs" />
     <Compile Include="Utils\FTP.cs" />
     <Compile Include="Utils\ManagedAES.cs" />
     <Compile Include="Utils\SPSyntaxTidy\SPSyntaxTidy.cs" />
@@ -294,19 +297,11 @@
     <Resource Include="Resources\AboutImages\sourcemod.png" />
     <Resource Include="Resources\AboutImages\smlib.png" />
     <Resource Include="Resources\AboutImages\alliedmodders.png" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <None Include="Resources\Misc\Configurations\Configs.xml">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Lysis\LysisForSpedit.csproj">
-      <Project>{a8d94e5a-0cdc-4f01-8801-5770b3ca2b5b}</Project>
-      <Name>LysisForSpedit</Name>
-    </ProjectReference>
     <ProjectReference Include="SourcepawnCondenser\SourcepawnCondenser\SourcepawnCondenser.csproj">
       <Project>{b4e00f2d-dd73-42c7-a0ca-ba92b2a05850}</Project>
       <Name>SourcepawnCondenser</Name>
@@ -439,6 +434,7 @@
     <ClInclude Include="Deploy\GPLv3.txt" />
     <ClInclude Include="Deploy\icon.ico" />
     <ClInclude Include="Deploy\SPCode.nsi" />
+    <Content Include=".editorconfig" />
     <Content Include="Deploy\Compress.ps1" />
     <ClInclude Include="Resources\lang_0_spcode.xml" />
     <ClInclude Include="Resources\lang_0_spcode_entryTemplate.xml" />
@@ -453,6 +449,8 @@
     <ClInclude Include="Resources\Misc\Templates\Template_Generic.sp" />
     <ClInclude Include="Resources\Misc\Templates\Template_TF2.sp" />
     <Content Include="Deploy\nsis-plugins\DotNetChecker.dll" />
+    <Resource Include="Resources\AboutImages\AdoptOpenJDK.jpg" />
+    <Resource Include="Resources\AboutImages\peace-maker.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resources\Misc\Configurations\sm_1_10_0_6478\include\admin.inc" />
@@ -533,24 +531,26 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>md ".\sourcepawn"
-            md ".\sourcepawn\templates"
-            md ".\sourcepawn\configs"
-            md ".\sourcepawn\temp"
-            md ".\sourcepawn\scripts"
-            md ".\sourcepawn\errorfiles"
-            md ".\nsis-plugins"
-            C:\Windows\system32\xcopy ".\..\..\Resources\Misc\Templates\*.*" ".\sourcepawn\templates\*.*" /e /y /q
-            C:\Windows\system32\xcopy ".\..\..\Resources\Misc\Configurations" ".\sourcepawn\configs" /e /y /q /d
-            copy ".\..\..\Resources\lang_0_spcode.xml" ".\lang_0_spcode.xml" /y
-            copy ".\..\..\Deploy\SPCode.nsi" ".\SPCode.nsi" /y
-            copy ".\..\..\Deploy\Compress.ps1" ".\Compress.ps1" /y
-            copy ".\..\..\Deploy\DotNetChecker.nsh" ".\DotNetChecker.nsh" /y
-            copy ".\..\..\Deploy\FileAssociation.nsh" ".\FileAssociation.nsh" /y
-            copy ".\..\..\Deploy\GPLv3.txt" ".\GPLv3.txt" /y
-            copy ".\..\..\Deploy\icon.ico" ".\icon.ico" /y
-            copy ".\..\..\Deploy\nsis-plugins\DotNetChecker.dll" ".\nsis-plugins\DotNetChecker.dll" /y
-        </PostBuildEvent>
+    <PostBuildEvent>
+      md ".\sourcepawn"
+      md ".\sourcepawn\templates"
+      md ".\sourcepawn\configs"
+      md ".\sourcepawn\temp"
+      md ".\sourcepawn\errorfiles"
+      md ".\nsis-plugins"
+      md ".\lysis"
+      C:\Windows\system32\xcopy ".\..\..\Resources\Misc\Templates\*.*" ".\sourcepawn\templates\*.*" /e /y /q
+      C:\Windows\system32\xcopy ".\..\..\Resources\Misc\Configurations" ".\sourcepawn\configs" /e /y /q /d
+      C:\Windows\system32\xcopy ".\..\..\Resources\Misc\Lysis\*.*" ".\lysis" /e /y /q
+      copy ".\..\..\Resources\lang_0_spcode.xml" ".\lang_0_spcode.xml" /y
+      copy ".\..\..\Deploy\SPCode.nsi" ".\SPCode.nsi" /y
+      copy ".\..\..\Deploy\Compress.ps1" ".\Compress.ps1" /y
+      copy ".\..\..\Deploy\DotNetChecker.nsh" ".\DotNetChecker.nsh" /y
+      copy ".\..\..\Deploy\FileAssociation.nsh" ".\FileAssociation.nsh" /y
+      copy ".\..\..\Deploy\GPLv3.txt" ".\GPLv3.txt" /y
+      copy ".\..\..\Deploy\icon.ico" ".\icon.ico" /y
+      copy ".\..\..\Deploy\nsis-plugins\DotNetChecker.dll" ".\nsis-plugins\DotNetChecker.dll" /y
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

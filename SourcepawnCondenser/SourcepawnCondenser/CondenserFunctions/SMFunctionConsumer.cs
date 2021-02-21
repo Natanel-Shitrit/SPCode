@@ -20,58 +20,66 @@ namespace SourcepawnCondenser
             switch (t[startPosition].Value)
             {
                 case "stock":
-                {
-                    if (startPosition + 1 < length)
-                        if (t[startPosition + 1].Kind == TokenKind.FunctionIndicator)
-                            if (t[startPosition + 1].Value == "static")
+                    {
+                        if (startPosition + 1 < length)
+                        {
+                            if (t[startPosition + 1].Kind == TokenKind.FunctionIndicator)
                             {
-                                kind = SMFunctionKind.StockStatic;
-                                ++iteratePosition;
-                                break;
+                                if (t[startPosition + 1].Value == "static")
+                                {
+                                    kind = SMFunctionKind.StockStatic;
+                                    ++iteratePosition;
+                                    break;
+                                }
                             }
+                        }
 
-                    kind = SMFunctionKind.Stock;
-                    break;
-                }
+                        kind = SMFunctionKind.Stock;
+                        break;
+                    }
                 case "native":
-                {
-                    kind = SMFunctionKind.Native;
-                    break;
-                }
+                    {
+                        kind = SMFunctionKind.Native;
+                        break;
+                    }
                 case "forward":
-                {
-                    kind = SMFunctionKind.Forward;
-                    break;
-                }
+                    {
+                        kind = SMFunctionKind.Forward;
+                        break;
+                    }
                 case "public":
-                {
-                    if (startPosition + 1 < length)
-                        if (t[startPosition + 1].Kind == TokenKind.FunctionIndicator)
-                            if (t[startPosition + 1].Value == "native")
+                    {
+                        if (startPosition + 1 < length)
+                        {
+                            if (t[startPosition + 1].Kind == TokenKind.FunctionIndicator)
                             {
-                                kind = SMFunctionKind.PublicNative;
-                                ++iteratePosition;
-                                break;
+                                if (t[startPosition + 1].Value == "native")
+                                {
+                                    kind = SMFunctionKind.PublicNative;
+                                    ++iteratePosition;
+                                    break;
+                                }
                             }
+                        }
 
-                    kind = SMFunctionKind.Public;
-                    break;
-                }
+                        kind = SMFunctionKind.Public;
+                        break;
+                    }
                 case "static":
-                {
-                    kind = SMFunctionKind.Static;
-                    break;
-                }
+                    {
+                        kind = SMFunctionKind.Static;
+                        break;
+                    }
                 case "normal":
-                {
-                    kind = SMFunctionKind.Normal;
-                    break;
-                }
+                    {
+                        kind = SMFunctionKind.Normal;
+                        break;
+                    }
                 default:
-                {
-                    functionReturnType = t[startPosition].Value;
-                    break;
-                }
+                    {
+                        functionReturnType = t[startPosition].Value;
+                        break;
+                    }
             }
 
             var functionCommentString = string.Empty;
@@ -115,11 +123,16 @@ namespace SourcepawnCondenser
                     }
 
                     if (t[iteratePosition].Kind == TokenKind.Character)
+                    {
                         if (t[iteratePosition].Value.Length > 0)
                         {
                             var testChar = t[iteratePosition].Value[0];
-                            if (testChar == ':' || testChar == '[' || testChar == ']') continue;
+                            if (testChar == ':' || testChar == '[' || testChar == ']')
+                            {
+                                continue;
+                            }
                         }
+                    }
 
                     return -1;
                 }
@@ -127,7 +140,11 @@ namespace SourcepawnCondenser
                 return -1;
             }
 
-            if (string.IsNullOrEmpty(functionName)) return -1;
+            if (string.IsNullOrEmpty(functionName))
+            {
+                return -1;
+            }
+
             ++iteratePosition;
             var functionParameters = new List<string>();
             var parameterDeclIndexStart = t[iteratePosition].Index;
@@ -163,7 +180,9 @@ namespace SourcepawnCondenser
                         {
                             var singleParameterString = source.Substring(lastParameterIndex + 1, length + 1);
                             if (!string.IsNullOrWhiteSpace(singleParameterString))
+                            {
                                 functionParameters.Add(singleParameterString);
+                            }
                         }
 
                         break;
@@ -172,8 +191,16 @@ namespace SourcepawnCondenser
                     continue;
                 }
 
-                if (t[iteratePosition].Kind == TokenKind.BraceOpen) ++braceState;
-                if (t[iteratePosition].Kind == TokenKind.BraceClose) --braceState;
+                if (t[iteratePosition].Kind == TokenKind.BraceOpen)
+                {
+                    ++braceState;
+                }
+
+                if (t[iteratePosition].Kind == TokenKind.BraceClose)
+                {
+                    --braceState;
+                }
+
                 if (t[iteratePosition].Kind == TokenKind.Comma && braceState == 0)
                 {
                     gotCommaBreak = true;
@@ -185,10 +212,13 @@ namespace SourcepawnCondenser
                 }
             }
 
-            if (parameterDeclIndexEnd == -1) return -1;
+            if (parameterDeclIndexEnd == -1)
+            {
+                return -1;
+            }
 
             var localVars = new List<SMVariable>();
-            
+
             if (outTokenIndex + 1 < length)
             {
                 if (t[outTokenIndex + 1].Kind == TokenKind.Semicolon)
@@ -215,6 +245,7 @@ namespace SourcepawnCondenser
                 {
                     braceState = 0;
                     for (var i = nextOpenBraceTokenIndex; i < length; ++i)
+                    {
                         if (t[i].Kind == TokenKind.BraceOpen)
                         {
                             ++braceState;
@@ -245,6 +276,7 @@ namespace SourcepawnCondenser
                                 return i;
                             }
                         }
+                    }
                 }
             }
 
@@ -275,7 +307,10 @@ namespace SourcepawnCondenser
             var length = t.Length;
 
             var variables = new List<SMVariable>();
-            if (3 >= length) return variables;
+            if (3 >= length)
+            {
+                return variables;
+            }
 
             while (position < length)
             {
@@ -290,14 +325,20 @@ namespace SourcepawnCondenser
                 // Dynamic array: "char[] x = new char[64];"
                 var continueNext = false;
 
-                if (position + 3 >= length) return variables;
+                if (position + 3 >= length)
+                {
+                    return variables;
+                }
+
                 if (t[position + 1].Kind == TokenKind.Character)
                 {
                     for (var i = 1; i < length; i += 2)
                     {
                         index = i;
                         if (t[position + i].Kind == TokenKind.Identifier)
+                        {
                             break;
+                        }
 
                         if (t[position + i].Value == "[" && t[position + i + 1].Value == "]")
                         {
@@ -331,9 +372,13 @@ namespace SourcepawnCondenser
                         {
                             variables.Add(new SMVariable
                             {
-                                Index = startIndex, Length = t[position + i].Index - startIndex,
+                                Index = startIndex,
+                                Length = t[position + i].Index - startIndex,
                                 File = FileName,
-                                Name = varName, Type = varType, Dimensions = dimensions, Size = size
+                                Name = varName,
+                                Type = varType,
+                                Dimensions = dimensions,
+                                Size = size
                             });
                             continueNext = true;
                             position += i;
@@ -355,7 +400,9 @@ namespace SourcepawnCondenser
                     }
 
                     if (continueNext)
+                    {
                         continue;
+                    }
                 }
 
                 if (t[position + 1].Kind != TokenKind.Identifier)
@@ -372,21 +419,28 @@ namespace SourcepawnCondenser
                     case TokenKind.Semicolon:
                         variables.Add(new SMVariable
                         {
-                            Index = startIndex, Length = t[position + 2].Index - startIndex, File = FileName,
-                            Name = varName, Type = varType
+                            Index = startIndex,
+                            Length = t[position + 2].Index - startIndex,
+                            File = FileName,
+                            Name = varName,
+                            Type = varType
                         });
                         position += 2;
                         continueNext = true;
                         break;
                     // Assign var match: "int x = 5"
                     case TokenKind.Assignment when (t[position + 3].Kind == TokenKind.Number ||
-                                                    t[position + 3].Kind == TokenKind.Quote  ||
+                                                    t[position + 3].Kind == TokenKind.Quote ||
                                                     t[position + 3].Kind == TokenKind.Identifier)
                                                     && t[position + 4].Kind == TokenKind.Semicolon:
                         variables.Add(new SMVariable
                         {
-                            Index = startIndex, Length = t[position + 4].Index - startIndex, File = FileName,
-                            Name = varName, Type = varType, Value = t[position + 3].Value
+                            Index = startIndex,
+                            Length = t[position + 4].Index - startIndex,
+                            File = FileName,
+                            Name = varName,
+                            Type = varType,
+                            Value = t[position + 3].Value
                         });
                         position += 4;
                         continueNext = true;
@@ -394,7 +448,9 @@ namespace SourcepawnCondenser
                 }
 
                 if (continueNext)
+                {
                     continue;
+                }
 
                 // Array declaration match: "int x[3][3]...;"
                 var requireAssign = false;
@@ -403,7 +459,9 @@ namespace SourcepawnCondenser
                 {
                     index = i;
                     if (t[position + i].Kind == TokenKind.Semicolon)
+                    {
                         break;
+                    }
 
                     if (t[position + i].Value == "[" && t[position + i + 2].Value == "]")
                     {
@@ -434,14 +492,21 @@ namespace SourcepawnCondenser
                 }
 
                 if (continueNext)
+                {
                     continue;
+                }
 
                 if (t[position + index].Kind == TokenKind.Semicolon && !requireAssign)
                 {
                     variables.Add(new SMVariable
                     {
-                        Index = startIndex, Length = t[position + index].Index - startIndex, File = FileName,
-                        Name = varName, Type = varType, Dimensions = dimensions, Size = size
+                        Index = startIndex,
+                        Length = t[position + index].Index - startIndex,
+                        File = FileName,
+                        Name = varName,
+                        Type = varType,
+                        Dimensions = dimensions,
+                        Size = size
                     });
                     position += index;
                     continue;
@@ -478,9 +543,13 @@ namespace SourcepawnCondenser
 
                         variables.Add(new SMVariable
                         {
-                            Index = startIndex, Length = t[position + index].Index - startIndex,
+                            Index = startIndex,
+                            Length = t[position + index].Index - startIndex,
                             File = FileName,
-                            Name = varName, Type = varType, Dimensions = dimensions, Size = size,
+                            Name = varName,
+                            Type = varType,
+                            Dimensions = dimensions,
+                            Size = size,
                             Value = "-1" //TODO: Add proper value
                         });
                     }
@@ -496,9 +565,13 @@ namespace SourcepawnCondenser
 
                         variables.Add(new SMVariable
                         {
-                            Index = startIndex, Length = t[position + index + 2].Index - startIndex,
+                            Index = startIndex,
+                            Length = t[position + index + 2].Index - startIndex,
                             File = FileName,
-                            Name = varName, Type = varType, Dimensions = dimensions, Size = size,
+                            Name = varName,
+                            Type = varType,
+                            Dimensions = dimensions,
+                            Size = size,
                             Value = t[position + index + 1].Value
                         });
                     }

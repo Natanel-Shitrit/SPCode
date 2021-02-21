@@ -1,11 +1,9 @@
 ﻿using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Indentation;
-using ICSharpCode.AvalonEdit.Rendering;
-using System.Windows.Media;
 
 namespace SPCode.UI.Components
 {
-    public class EditorIndetationStrategy : IIndentationStrategy
+    public class EditorIndentationStrategy : IIndentationStrategy
     {
         public void IndentLine(TextDocument document, DocumentLine line)
         {
@@ -13,21 +11,21 @@ namespace SPCode.UI.Components
             {
                 return;
             }
-            DocumentLine previousLine = line.PreviousLine;
+            var previousLine = line.PreviousLine;
             if (previousLine != null)
             {
-                ISegment indentationSegment = TextUtilities.GetWhitespaceAfter(document, previousLine.Offset);
-                string indentation = document.GetText(indentationSegment);
+                var indentationSegment = TextUtilities.GetWhitespaceAfter(document, previousLine.Offset);
+                var indentation = document.GetText(indentationSegment);
                 if (Program.OptionsObject.Editor_AgressiveIndentation)
                 {
-                    string currentLineTextTrimmed = (document.GetText(line)).Trim();
-                    string lastLineTextTrimmed = (document.GetText(previousLine)).Trim();
-                    char currentLineFirstNonWhitespaceChar = ' ';
+                    var currentLineTextTrimmed = document.GetText(line).Trim();
+                    var lastLineTextTrimmed = document.GetText(previousLine).Trim();
+                    var currentLineFirstNonWhitespaceChar = ' ';
                     if (currentLineTextTrimmed.Length > 0)
                     {
                         currentLineFirstNonWhitespaceChar = currentLineTextTrimmed[0];
                     }
-                    char lastLineLastNonWhitespaceChar = ' ';
+                    var lastLineLastNonWhitespaceChar = ' ';
                     if (lastLineTextTrimmed.Length > 0)
                     {
                         lastLineLastNonWhitespaceChar = lastLineTextTrimmed[lastLineTextTrimmed.Length - 1];
@@ -41,10 +39,6 @@ namespace SPCode.UI.Components
                         if (indentation.Length > 0)
                         {
                             indentation = indentation.Substring(0, indentation.Length) + Program.Indentation + "\n" + indentation.Substring(0, indentation.Length);
-                        }
-                        else
-                        {
-                            indentation = Program.Indentation + "\n";
                         }
                     }
                     /*if (lastLineTextTrimmed == "{" && currentLineTextTrimmed != "}")

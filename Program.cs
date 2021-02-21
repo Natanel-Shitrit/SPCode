@@ -15,6 +15,7 @@ using SPCode.Interop;
 using SPCode.Interop.Updater;
 using SPCode.UI;
 using SPCode.UI.Interop;
+using SPCode.Utils;
 
 namespace SPCode
 {
@@ -29,12 +30,15 @@ namespace SPCode
         public static UpdateInfo UpdateStatus;
 
         public static bool RCCKMade;
-        public static DiscordRpcClient discordClient = new DiscordRpcClient("692110664948514836");
+        public static DiscordRpcClient discordClient = new DiscordRpcClient(Constants.DiscordRPCAppID);
         public static Timestamps discordTime = Timestamps.Now;
 
         public static string Indentation => OptionsObject.Editor_ReplaceTabsToWhitespace
             ? new string(' ', OptionsObject.Editor_IndentationSize)
             : "\t";
+
+        public static bool _IsLocalInstallation;
+
 
         [STAThread]
         public static void Main(string[] args)
@@ -42,10 +46,10 @@ namespace SPCode
 #if DEBUG     
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
+
 #endif
 
-            bool mutexReserved;
-            using (new Mutex(true, "SPCodeGlobalMutex", out mutexReserved))
+            using (new Mutex(true, "SPCodeGlobalMutex", out var mutexReserved))
             {
                 if (mutexReserved)
                 {
@@ -53,56 +57,66 @@ namespace SPCode
                     try
                     {
 #endif
-                        var splashScreen = new SplashScreen("Resources/Icon256x.png");
-                        splashScreen.Show(false, true);
-                        Environment.CurrentDirectory =
-                            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ??
-                            throw new NullReferenceException();
+
+                    var splashScreen = new SplashScreen("Resources/Icon256x.png");
+                    splashScreen.Show(false, true);
+                    Environment.CurrentDirectory =
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ??
+                        throw new NullReferenceException();
 #if !DEBUG
                         ProfileOptimization.SetProfileRoot(Environment.CurrentDirectory);
                         ProfileOptimization.StartProfile("Startup.Profile");
 #endif
-                        UpdateStatus = new UpdateInfo();
-                        OptionsObject = OptionsControlIOObject.Load(out var ProgramIsNew);
-                        
-                        if (OptionsObject.Program_DiscordPresence)
+                    _IsLocalInstallation = Paths.IsLocalInstallation();
+                    UpdateStatus = new UpdateInfo();
+                    OptionsObject = OptionsControlIOObject.Load(out var ProgramIsNew);
+
+                    if (OptionsObject.Program_DiscordPresence)
+                    {
+                        // Init Discord RPC
+                        discordClient.Initialize();
+
+                        // Set default presence
+                        discordClient.SetPresence(new RichPresence
                         {
-                            // Init Discord RPC
-                            discordClient.Initialize();
-
-                            // Set default presence
-                            discordClient.SetPresence(new RichPresence
+                            State = "Idle",
+                            Timestamps = discordTime,
+                            Assets = new Assets
                             {
-                                State = "Idle",
-                                Timestamps = discordTime,
-                                Assets = new Assets
-                                {
-                                    LargeImageKey = "immagine"
-                                }
-                            });
+                                LargeImageKey = "immagine"
+                            }
+                        });
+                    }
+
+
+                    Translations = new TranslationProvider();
+                    Translations.LoadLanguage(OptionsObject.Language, true);
+                    foreach (var arg in args)
+                    {
+                        if (arg.ToLowerInvariant() == "-rcck") //ReCreateCryptoKey
+                        {
+                            OptionsObject.ReCreateCryptoKey();
+                            MakeRCCKAlert();
                         }
-                        
-                        Translations = new TranslationProvider();
-                        Translations.LoadLanguage(OptionsObject.Language, true);
-                        foreach (var arg in args)
-                            if (arg.ToLowerInvariant() == "-rcck") //ReCreateCryptoKey
-                            {
-                                OptionsObject.ReCreateCryptoKey();
-                                MakeRCCKAlert();
-                            }
+                    }
 
-                        Configs = ConfigLoader.Load();
-                        for (var i = 0; i < Configs.Length; ++i)
-                            if (Configs[i].Name == OptionsObject.Program_SelectedConfig)
-                            {
-                                SelectedConfig = i;
-                                break;
-                            }
+                    Configs = ConfigLoader.Load();
+                    for (var i = 0; i < Configs.Length; ++i)
+                    {
+                        if (Configs[i].Name == OptionsObject.Program_SelectedConfig)
+                        {
+                            SelectedConfig = i;
+                            break;
+                        }
+                    }
 
-                        if (!OptionsObject.Program_UseHardwareAcceleration)
-                            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+                    if (!OptionsObject.Program_UseHardwareAcceleration)
+                    {
+                        RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+                    }
 #if !DEBUG
                         if (ProgramIsNew)
+                        {
                             if (Translations.AvailableLanguageIDs.Length > 0)
                             {
                                 splashScreen.Close(new TimeSpan(0, 0, 1));
@@ -119,20 +133,21 @@ namespace SPCode
 
                                 splashScreen.Show(false, true);
                             }
+                        }
 #endif
-                        MainWindow = new MainWindow(splashScreen);
-                        var pipeServer = new PipeInteropServer(MainWindow);
-                        pipeServer.Start();
+                    MainWindow = new MainWindow(splashScreen);
+                    var pipeServer = new PipeInteropServer(MainWindow);
+                    pipeServer.Start();
 #if !DEBUG
                     }
                     catch (Exception e)
                     {
-                        File.WriteAllText("CRASH_" + Environment.TickCount + ".txt",
+                        File.WriteAllText($@"{Paths.GetCrashLogDirectory()}\CRASH_{Environment.TickCount}.txt",
                             BuildExceptionString(e, "SPCODE LOADING"));
                         MessageBox.Show(
-                            "An error occured while loading." + Environment.NewLine +
-                            "A crash report was written in the editor-directory.",
-                            "Error while Loading",
+                            "An error occured." + Environment.NewLine +
+                            $"A crash report was written in {Paths.GetCrashLogDirectory()}",
+                            "Error",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
                         Environment.Exit(Environment.ExitCode);
@@ -142,20 +157,23 @@ namespace SPCode
 #if !DEBUG
                     try
                     {
-                        if (OptionsObject.Program_CheckForUpdates) Task.Run(UpdateCheck.Check);
+                        if (OptionsObject.Program_CheckForUpdates)
+                        {
+                            Task.Run(UpdateCheck.Check);
+                        }
 #endif
-                        app.Startup += App_Startup;
-                        app.Run(MainWindow);
-                        OptionsControlIOObject.Save();
+                    app.Startup += App_Startup;
+                    app.Run(MainWindow);
+                    OptionsControlIOObject.Save();
 #if !DEBUG
                     }
                     catch (Exception e)
                     {
-                        File.WriteAllText("CRASH_" + Environment.TickCount + ".txt",
+                        File.WriteAllText($@"{Paths.GetCrashLogDirectory()}\CRASH_{Environment.TickCount}.txt",
                             BuildExceptionString(e, "SPCODE MAIN"));
                         MessageBox.Show(
                             "An error occured." + Environment.NewLine +
-                            "A crash report was written in the editor-directory.",
+                            $"A crash report was written in {Paths.GetCrashLogDirectory()}",
                             "Error",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
@@ -170,6 +188,7 @@ namespace SPCode
                         var sBuilder = new StringBuilder();
                         var addedFiles = false;
                         for (var i = 0; i < args.Length; ++i)
+                        {
                             if (!string.IsNullOrWhiteSpace(args[i]))
                             {
                                 var fInfo = new FileInfo(args[i]);
@@ -180,12 +199,19 @@ namespace SPCode
                                     {
                                         addedFiles = true;
                                         sBuilder.Append(fInfo.FullName);
-                                        if (i + 1 != args.Length) sBuilder.Append("|");
+                                        if (i + 1 != args.Length)
+                                        {
+                                            sBuilder.Append("|");
+                                        }
                                     }
                                 }
                             }
+                        }
 
-                        if (addedFiles) PipeInteropClient.ConnectToMasterPipeAndSendData(sBuilder.ToString());
+                        if (addedFiles)
+                        {
+                            PipeInteropClient.ConnectToMasterPipeAndSendData(sBuilder.ToString());
+                        }
                     }
                     catch (Exception)
                     {
@@ -197,7 +223,11 @@ namespace SPCode
 
         public static void MakeRCCKAlert()
         {
-            if (RCCKMade) return;
+            if (RCCKMade)
+            {
+                return;
+            }
+
             RCCKMade = true;
             MessageBox.Show(
                 "All FTP/RCon passwords are now encrypted wrong!" + Environment.NewLine + "You have to replace them!",
@@ -210,7 +240,10 @@ namespace SPCode
             for (var i = 0; i < files.Length; ++i)
             {
                 var fInfo = new FileInfo(files[i]);
-                if (fInfo.Name.StartsWith("updater_", StringComparison.CurrentCultureIgnoreCase)) fInfo.Delete();
+                if (fInfo.Name.StartsWith("updater_", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    fInfo.Delete();
+                }
             }
         }
 
@@ -227,19 +260,24 @@ namespace SPCode
             var outString = new StringBuilder();
             outString.AppendLine("Section: " + SectionName);
             outString.AppendLine(".NET Version: " + Environment.Version);
+            outString.AppendLine("Is local installation?: " + _IsLocalInstallation);
             outString.AppendLine("OS: " + Environment.OSVersion.VersionString);
             outString.AppendLine("64 bit OS: " + (Environment.Is64BitOperatingSystem ? "TRUE" : "FALSE"));
             outString.AppendLine("64 bit mode: " + (Environment.Is64BitProcess ? "TRUE" : "FALSE"));
             outString.AppendLine("Dir: " + Environment.CurrentDirectory);
-            outString.AppendLine("Working Set: " + Environment.WorkingSet / 1024 + " kb");
+            outString.AppendLine("Working Set: " + (Environment.WorkingSet / 1024) + " kb");
             outString.AppendLine("Installed UI Culture: " + CultureInfo.InstalledUICulture);
             outString.AppendLine("Current UI Culture: " + CultureInfo.CurrentUICulture);
             outString.AppendLine("Current Culture: " + CultureInfo.CurrentCulture);
             outString.AppendLine();
             var eNumber = 1;
-            for (;;)
+            for (; ; )
             {
-                if (e == null) break;
+                if (e == null)
+                {
+                    break;
+                }
+
                 outString.AppendLine("Exception " + eNumber);
                 outString.AppendLine("Message:");
                 outString.AppendLine(e.Message);

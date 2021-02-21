@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Diagnostics;
-
-namespace Lysis
+﻿namespace Lysis
 {
     public class NodeList
     {
-        private DNode head_;
+        private readonly DNode head_;
 
         public NodeList()
         {
@@ -45,7 +39,7 @@ namespace Lysis
         }
         public void remove(iterator_base where)
         {
-            DNode node = where.node;
+            var node = where.node;
             where.next();
             remove(node);
         }
@@ -71,14 +65,8 @@ namespace Lysis
             where.node = with;
         }
 
-        public DNode last
-        {
-            get { return head_.prev; }
-        }
-        public DNode first
-        {
-            get { return head_.next; }
-        }
+        public DNode last => head_.prev;
+        public DNode first => head_.next;
 
         public abstract class iterator_base
         {
@@ -98,8 +86,8 @@ namespace Lysis
 
             public DNode node
             {
-                get { return node_; }
-                set { node_ = value; }
+                get => node_;
+                set => node_ = value;
             }
         }
 

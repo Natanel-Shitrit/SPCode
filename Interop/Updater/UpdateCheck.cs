@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Octokit;
@@ -11,8 +10,13 @@ namespace SPCode.Interop.Updater
         public static async Task Check()
         {
             if (Program.UpdateStatus != null)
+            {
                 if (Program.UpdateStatus.IsAvailable)
+                {
                     return;
+                }
+            }
+
             await CheckInternal();
         }
 
@@ -45,11 +49,14 @@ namespace SPCode.Interop.Updater
 
             lock (Program.UpdateStatus) //since multiple checks can occur, we'll wont override another ones...
             {
-                if (Program.UpdateStatus.WriteAble) Program.UpdateStatus = info;
+                if (Program.UpdateStatus.WriteAble)
+                {
+                    Program.UpdateStatus = info;
+                }
             }
         }
 
-        
+
         /*
          * 0 -> Major
          * 1 -> Minor

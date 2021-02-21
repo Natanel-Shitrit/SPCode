@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SourcePawn;
-using System.Diagnostics;
 
 namespace Lysis
 {
@@ -32,10 +29,10 @@ namespace Lysis
             }
         }
 
-        private SourcePawnFile file_;
+        private readonly SourcePawnFile file_;
         private uint pc_;
         private uint current_pc_;
-        private LIR lir_ = new LIR();
+        private readonly LIR lir_ = new LIR();
 
         private int readInt32()
         {
@@ -44,7 +41,7 @@ namespace Lysis
         }
 
         private uint readUInt32()
-        { 
+        {
             pc_ += 4;
             return BitConverter.ToUInt32(file_.code.bytes, (int)pc_ - 4);
         }
@@ -64,16 +61,25 @@ namespace Lysis
         private LBlock prepareJumpTarget(uint offset)
         {
             if (!lir_.targets.ContainsKey(offset))
+            {
                 lir_.targets[offset] = new LBlock(offset);
+            }
+
             return lir_.targets[offset];
         }
 
         private int trackStack(int offset)
         {
             if (offset < 0)
+            {
                 return offset;
+            }
+
             if (offset > lir_.argDepth)
+            {
                 lir_.argDepth = offset;
+            }
+
             return offset;
         }
 
@@ -83,38 +89,38 @@ namespace Lysis
             {
                 case SPOpcode.load_pri:
                 case SPOpcode.load_alt:
-                {
-                    Register reg = (op == SPOpcode.load_pri) ? Register.Pri : Register.Alt;
-                    return new LLoadGlobal(readInt32(), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.load_pri) ? Register.Pri : Register.Alt;
+                        return new LLoadGlobal(readInt32(), reg);
+                    }
 
                 case SPOpcode.load_s_pri:
                 case SPOpcode.load_s_alt:
-                {
-                    Register reg = (op == SPOpcode.load_s_pri) ? Register.Pri : Register.Alt;
-                    return new LLoadLocal(trackStack(readInt32()), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.load_s_pri) ? Register.Pri : Register.Alt;
+                        return new LLoadLocal(trackStack(readInt32()), reg);
+                    }
 
                 case SPOpcode.lref_s_pri:
                 case SPOpcode.lref_s_alt:
-                {
-                    Register reg = (op == SPOpcode.lref_s_pri) ? Register.Pri : Register.Alt;
-                    return new LLoadLocalRef(trackStack(readInt32()), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.lref_s_pri) ? Register.Pri : Register.Alt;
+                        return new LLoadLocalRef(trackStack(readInt32()), reg);
+                    }
 
                 case SPOpcode.stor_s_pri:
                 case SPOpcode.stor_s_alt:
-                {
-                    Register reg = (op == SPOpcode.stor_s_pri) ? Register.Pri : Register.Alt;
-                    return new LStoreLocal(reg, trackStack(readInt32()));
-                }
+                    {
+                        var reg = (op == SPOpcode.stor_s_pri) ? Register.Pri : Register.Alt;
+                        return new LStoreLocal(reg, trackStack(readInt32()));
+                    }
 
                 case SPOpcode.sref_s_pri:
                 case SPOpcode.sref_s_alt:
-                {
-                    Register reg = (op == SPOpcode.sref_s_pri) ? Register.Pri : Register.Alt;
-                    return new LStoreLocalRef(reg, trackStack(readInt32()));
-                }
+                    {
+                        var reg = (op == SPOpcode.sref_s_pri) ? Register.Pri : Register.Alt;
+                        return new LStoreLocalRef(reg, trackStack(readInt32()));
+                    }
 
                 case SPOpcode.load_i:
                     return new LLoad(4);
@@ -124,24 +130,24 @@ namespace Lysis
 
                 case SPOpcode.const_pri:
                 case SPOpcode.const_alt:
-                {
-                    Register reg = (op == SPOpcode.const_pri) ? Register.Pri : Register.Alt;
-                    return new LConstant(readInt32(), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.const_pri) ? Register.Pri : Register.Alt;
+                        return new LConstant(readInt32(), reg);
+                    }
 
                 case SPOpcode.addr_pri:
                 case SPOpcode.addr_alt:
-                {
-                    Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
-                    return new LStackAddress(trackStack(readInt32()), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
+                        return new LStackAddress(trackStack(readInt32()), reg);
+                    }
 
                 case SPOpcode.stor_pri:
                 case SPOpcode.stor_alt:
-                {
-                    Register reg = (op == SPOpcode.stor_pri) ? Register.Pri : Register.Alt;
-                    return new LStoreGlobal(readInt32(), reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.stor_pri) ? Register.Pri : Register.Alt;
+                        return new LStoreGlobal(readInt32(), reg);
+                    }
 
                 case SPOpcode.stor_i:
                     return new LStore(4);
@@ -163,20 +169,20 @@ namespace Lysis
 
                 case SPOpcode.move_pri:
                 case SPOpcode.move_alt:
-                {
-                    Register reg = (op == SPOpcode.move_pri) ? Register.Pri : Register.Alt;
-                    return new LMove(reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.move_pri) ? Register.Pri : Register.Alt;
+                        return new LMove(reg);
+                    }
 
                 case SPOpcode.xchg:
                     return new LExchange();
 
                 case SPOpcode.push_pri:
                 case SPOpcode.push_alt:
-                {
-                    Register reg = (op == SPOpcode.push_pri) ? Register.Pri : Register.Alt;
-                    return new LPushReg(reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.push_pri) ? Register.Pri : Register.Alt;
+                        return new LPushReg(reg);
+                    }
 
                 case SPOpcode.push_c:
                     return new LPushConstant(readInt32());
@@ -189,10 +195,10 @@ namespace Lysis
 
                 case SPOpcode.pop_pri:
                 case SPOpcode.pop_alt:
-                {
-                    Register reg = (op == SPOpcode.pop_pri) ? Register.Pri : Register.Alt;
-                    return new LPop(reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.pop_pri) ? Register.Pri : Register.Alt;
+                        return new LPop(reg);
+                    }
 
                 case SPOpcode.stack:
                     return new LStack(readInt32());
@@ -204,10 +210,10 @@ namespace Lysis
                     return new LCall(readInt32());
 
                 case SPOpcode.jump:
-                {
-                    uint offset = readUInt32();
-                    return new LJump(prepareJumpTarget(offset), offset);
-                }
+                    {
+                        var offset = readUInt32();
+                        return new LJump(prepareJumpTarget(offset), offset);
+                    }
 
                 case SPOpcode.jeq:
                 case SPOpcode.jneq:
@@ -217,12 +223,15 @@ namespace Lysis
                 case SPOpcode.jsless:
                 case SPOpcode.jsgrtr:
                 case SPOpcode.jsleq:
-                {
-                    uint offset = readUInt32();
-                    if (offset == pc_)
-                        return new LJump(prepareJumpTarget(offset), offset);
-                    return new LJumpCondition(op, prepareJumpTarget(offset), prepareJumpTarget(pc_), offset);
-                }
+                    {
+                        var offset = readUInt32();
+                        if (offset == pc_)
+                        {
+                            return new LJump(prepareJumpTarget(offset), offset);
+                        }
+
+                        return new LJumpCondition(op, prepareJumpTarget(offset), prepareJumpTarget(pc_), offset);
+                    }
 
                 case SPOpcode.sdiv_alt:
                 case SPOpcode.sub_alt:
@@ -251,10 +260,10 @@ namespace Lysis
 
                 case SPOpcode.zero_pri:
                 case SPOpcode.zero_alt:
-                {
-                    Register reg = (op == SPOpcode.zero_pri) ? Register.Pri : Register.Alt;
-                    return new LConstant(0, reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.zero_pri) ? Register.Pri : Register.Alt;
+                        return new LConstant(0, reg);
+                    }
 
                 case SPOpcode.zero_s:
                     return new LZeroLocal(trackStack(readInt32()));
@@ -272,14 +281,14 @@ namespace Lysis
 
                 case SPOpcode.eq_c_pri:
                 case SPOpcode.eq_c_alt:
-                {
-                    Register reg = (op == SPOpcode.eq_c_pri) ? Register.Pri : Register.Alt;
-                    return new LEqualConstant(reg, readInt32());
-                }
+                    {
+                        var reg = (op == SPOpcode.eq_c_pri) ? Register.Pri : Register.Alt;
+                        return new LEqualConstant(reg, readInt32());
+                    }
 
                 case SPOpcode.inc:
                     return new LIncGlobal(readInt32());
-                    
+
                 case SPOpcode.inc_s:
                     return new LIncLocal(trackStack(readInt32()));
 
@@ -292,16 +301,16 @@ namespace Lysis
                 case SPOpcode.inc_pri:
                 case SPOpcode.inc_alt:
                     {
-                        Register reg = (op == SPOpcode.inc_pri) ? Register.Pri : Register.Alt;
+                        var reg = (op == SPOpcode.inc_pri) ? Register.Pri : Register.Alt;
                         return new LIncReg(reg);
                     }
 
                 case SPOpcode.dec_pri:
                 case SPOpcode.dec_alt:
-                {
-                    Register reg = (op == SPOpcode.dec_pri) ? Register.Pri : Register.Alt;
-                    return new LDecReg(reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.dec_pri) ? Register.Pri : Register.Alt;
+                        return new LDecReg(reg);
+                    }
 
                 case SPOpcode.dec_i:
                     return new LDecI();
@@ -314,21 +323,21 @@ namespace Lysis
 
                 case SPOpcode.swap_pri:
                 case SPOpcode.swap_alt:
-                {
-                    Register reg = (op == SPOpcode.swap_pri) ? Register.Pri : Register.Alt;
-                    return new LSwap(reg);
-                }
+                    {
+                        var reg = (op == SPOpcode.swap_pri) ? Register.Pri : Register.Alt;
+                        return new LSwap(reg);
+                    }
 
                 case SPOpcode.push_adr:
                     return new LPushStackAddress(trackStack(readInt32()));
 
                 case SPOpcode.sysreq_n:
-                {
-                    int index = readInt32();
-                    add(new LPushConstant(readInt32()));
-                    return new LSysReq(file_.natives[index]);
-                }
-                    
+                    {
+                        var index = readInt32();
+                        add(new LPushConstant(readInt32()));
+                        return new LSysReq(file_.natives[index]);
+                    }
+
                 case SPOpcode.dbreak:
                     return new LDebugBreak();
 
@@ -336,191 +345,191 @@ namespace Lysis
                     return null;
 
                 case SPOpcode.push2_s:
-                {
-                    add(new LPushLocal(trackStack(readInt32())));
-                    return new LPushLocal(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushLocal(trackStack(readInt32())));
+                        return new LPushLocal(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push2_adr:
-                {
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    return new LPushStackAddress(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        return new LPushStackAddress(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push2_c:
-                {
-                    add(new LPushConstant(readInt32()));
-                    return new LPushConstant(readInt32());
-                }
+                    {
+                        add(new LPushConstant(readInt32()));
+                        return new LPushConstant(readInt32());
+                    }
 
                 case SPOpcode.push2:
-                {
-                    add(new LPushGlobal(readInt32()));
-                    return new LPushGlobal(readInt32());
-                }
+                    {
+                        add(new LPushGlobal(readInt32()));
+                        return new LPushGlobal(readInt32());
+                    }
 
                 case SPOpcode.push3_s:
-                {
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    return new LPushLocal(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        return new LPushLocal(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push3_adr:
-                {
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    return new LPushStackAddress(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        return new LPushStackAddress(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push3_c:
-                {
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    return new LPushConstant(readInt32());
-                }
+                    {
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        return new LPushConstant(readInt32());
+                    }
 
                 case SPOpcode.push3:
-                {
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    return new LPushGlobal(readInt32());
-                }
+                    {
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        return new LPushGlobal(readInt32());
+                    }
 
                 case SPOpcode.push4_s:
-                {
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    return new LPushLocal(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        return new LPushLocal(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push4_adr:
-                {
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    return new LPushStackAddress(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        return new LPushStackAddress(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push4_c:
-                {
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    return new LPushConstant(readInt32());
-                }
+                    {
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        return new LPushConstant(readInt32());
+                    }
 
                 case SPOpcode.push4:
-                {
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    return new LPushGlobal(readInt32());
-                }
+                    {
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        return new LPushGlobal(readInt32());
+                    }
 
                 case SPOpcode.push5_s:
-                {
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    add(new LPushLocal(trackStack(readInt32())));
-                    return new LPushLocal(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        add(new LPushLocal(trackStack(readInt32())));
+                        return new LPushLocal(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push5_c:
-                {
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    add(new LPushConstant(readInt32()));
-                    return new LPushConstant(readInt32());
-                }
+                    {
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        add(new LPushConstant(readInt32()));
+                        return new LPushConstant(readInt32());
+                    }
 
                 case SPOpcode.push5_adr:
-                {
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    add(new LPushStackAddress(trackStack(readInt32())));
-                    return new LPushStackAddress(trackStack(readInt32()));
-                }
+                    {
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        add(new LPushStackAddress(trackStack(readInt32())));
+                        return new LPushStackAddress(trackStack(readInt32()));
+                    }
 
                 case SPOpcode.push5:
-                {
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    add(new LPushGlobal(readInt32()));
-                    return new LPushGlobal(readInt32());
-                }
+                    {
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        add(new LPushGlobal(readInt32()));
+                        return new LPushGlobal(readInt32());
+                    }
 
                 case SPOpcode.load_both:
-                {
-                    add(new LLoadLocal(readInt32(), Register.Pri));
-                    return new LLoadLocal(readInt32(), Register.Alt);
-                }
+                    {
+                        add(new LLoadLocal(readInt32(), Register.Pri));
+                        return new LLoadLocal(readInt32(), Register.Alt);
+                    }
 
                 case SPOpcode.load_s_both:
-                {
-                    add(new LLoadLocal(trackStack(readInt32()), Register.Pri));
-                    return new LLoadLocal(trackStack(readInt32()), Register.Alt);
-                }
+                    {
+                        add(new LLoadLocal(trackStack(readInt32()), Register.Pri));
+                        return new LLoadLocal(trackStack(readInt32()), Register.Alt);
+                    }
 
                 case SPOpcode.const_:
-                {
-                    return new LStoreGlobalConstant(readInt32(), readInt32());
-                }
+                    {
+                        return new LStoreGlobalConstant(readInt32(), readInt32());
+                    }
 
                 case SPOpcode.const_s:
-                {
-                    return new LStoreLocalConstant(trackStack(readInt32()), readInt32());
-                }
+                    {
+                        return new LStoreLocalConstant(trackStack(readInt32()), readInt32());
+                    }
 
                 case SPOpcode.heap:
-                {
-                    return new LHeap(readInt32());
-                }
+                    {
+                        return new LHeap(readInt32());
+                    }
 
                 case SPOpcode.movs:
-                {
-                    return new LMemCopy(readInt32());
-                }
+                    {
+                        return new LMemCopy(readInt32());
+                    }
 
                 case SPOpcode.switch_:
-                {
-                    uint table = readUInt32();
-                    uint savePc = pc_;
-                    pc_ = table;
-
-                    SPOpcode casetbl = (SPOpcode)readUInt32();
-                    //Debug.Assert(casetbl == SPOpcode.casetbl);
-
-                    int ncases = readInt32();
-                    uint defaultCase = readUInt32();
-                    var cases = new List<SwitchCase>();
-                    for (int i = 0; i < ncases; i++)
                     {
-                        int value = readInt32();
-                        uint pc = readUInt32();
-                        LBlock target = prepareJumpTarget(pc);
-                        cases.Add(new SwitchCase(value, target));
+                        var table = readUInt32();
+                        var savePc = pc_;
+                        pc_ = table;
+
+                        var casetbl = (SPOpcode)readUInt32();
+                        //Debug.Assert(casetbl == SPOpcode.casetbl);
+
+                        var ncases = readInt32();
+                        var defaultCase = readUInt32();
+                        var cases = new List<SwitchCase>();
+                        for (var i = 0; i < ncases; i++)
+                        {
+                            var value = readInt32();
+                            var pc = readUInt32();
+                            var target = prepareJumpTarget(pc);
+                            cases.Add(new SwitchCase(value, target));
+                        }
+                        pc_ = savePc;
+                        return new LSwitch(prepareJumpTarget(defaultCase), cases);
                     }
-                    pc_ = savePc;
-                    return new LSwitch(prepareJumpTarget(defaultCase), cases);
-                }
 
                 case SPOpcode.casetbl:
-                {
-                    int ncases = readInt32();
-                    pc_ += (uint)ncases * 8 + 4;
-                    return new LDebugBreak();
-                }
+                    {
+                        var ncases = readInt32();
+                        pc_ += ((uint)ncases * 8) + 4;
+                        return new LDebugBreak();
+                    }
 
                 default:
-                {
-                    throw new OpCodeNotKnownException("Unrecognized opcode " + op);
-                }
+                    {
+                        throw new OpCodeNotKnownException("Unrecognized opcode " + op);
+                    }
             }
         }
 
@@ -529,14 +538,19 @@ namespace Lysis
             lir_.entry_pc = pc_;
 
             if (readOp() != SPOpcode.proc)
+            {
                 throw new Exception("invalid method, first op must be PROC");
+            }
 
             while (pc_ < (uint)file_.code.bytes.Length)
             {
                 current_pc_ = pc_;
-                SPOpcode op = readOp();
+                var op = readOp();
                 if (op == SPOpcode.proc)
+                {
                     break;
+                }
+
                 add(readInstruction(op));
             }
 
@@ -545,9 +559,9 @@ namespace Lysis
 
         private class BlockBuilder
         {
-            private List<LInstruction> pending_ = new List<LInstruction>();
+            private readonly List<LInstruction> pending_ = new List<LInstruction>();
             private LBlock block_ = null;
-            private LIR lir_;
+            private readonly LIR lir_;
 
             private void transitionBlocks(LBlock next)
             {
@@ -570,15 +584,15 @@ namespace Lysis
 
             public LBlock parse()
             {
-                for (int i = 0; i < lir_.instructions.Count; i++)
+                for (var i = 0; i < lir_.instructions.Count; i++)
                 {
-                    LInstruction ins = lir_.instructions[i];
+                    var ins = lir_.instructions[i];
 
                     if (lir_.isTarget(ins.pc))
                     {
                         // This instruction is the target of a basic block, so
                         // finish the old one.
-                        LBlock next = lir_.blockOfTarget(ins.pc);
+                        var next = lir_.blockOfTarget(ins.pc);
 
                         // Multiple instructions could be at the same pc,
                         // because of decomposition, so make sure we're not
@@ -600,47 +614,52 @@ namespace Lysis
 
                     // If there is no block present, we assume this is dead code.
                     if (block_ == null)
+                    {
                         continue;
+                    }
 
                     pending_.Add(ins);
 
                     switch (ins.op)
                     {
                         case Opcode.Return:
-                        {
-                            // A return terminates the current block.
-                            transitionBlocks(null);
-                            break;
-                        }
+                            {
+                                // A return terminates the current block.
+                                transitionBlocks(null);
+                                break;
+                            }
 
                         case Opcode.Jump:
-                        {
-                            LJump jump = (LJump)ins;
-                            jump.target.addPredecessor(block_);
-                            transitionBlocks(null);
-                            break;
-                        }
+                            {
+                                var jump = (LJump)ins;
+                                jump.target.addPredecessor(block_);
+                                transitionBlocks(null);
+                                break;
+                            }
 
                         case Opcode.JumpCondition:
-                        {
-                            LJumpCondition jcc = (LJumpCondition)ins;
-                            jcc.trueTarget.addPredecessor(block_);
-                            jcc.falseTarget.addPredecessor(block_);
+                            {
+                                var jcc = (LJumpCondition)ins;
+                                jcc.trueTarget.addPredecessor(block_);
+                                jcc.falseTarget.addPredecessor(block_);
 
-                            // The next iteration will pick the false target up.
-                            //Debug.Assert(lir_.instructions[i + 1].pc == jcc.falseTarget.pc);
-                            transitionBlocks(null);
-                            break;
-                        }
+                                // The next iteration will pick the false target up.
+                                //Debug.Assert(lir_.instructions[i + 1].pc == jcc.falseTarget.pc);
+                                transitionBlocks(null);
+                                break;
+                            }
 
                         case Opcode.Switch:
-                        {
-                            LSwitch switch_ = (LSwitch)ins;
-                            for (int j = 0; j < switch_.numSuccessors; j++)
-                                switch_.getSuccessor(j).addPredecessor(block_);
-                            transitionBlocks(null);
-                            break;
-                        }
+                            {
+                                var switch_ = (LSwitch)ins;
+                                for (var j = 0; j < switch_.numSuccessors; j++)
+                                {
+                                    switch_.getSuccessor(j).addPredecessor(block_);
+                                }
+
+                                transitionBlocks(null);
+                                break;
+                            }
                     }
                 }
                 return lir_.entry;
@@ -650,14 +669,16 @@ namespace Lysis
         private LGraph buildBlocks()
         {
             lir_.entry = new LBlock(lir_.entry_pc);
-            BlockBuilder builder = new BlockBuilder(lir_);
-            LBlock entry = builder.parse();
+            var builder = new BlockBuilder(lir_);
+            var entry = builder.parse();
 
             // Get an RPO ordering of the blocks, since we don't have predecessors yet.
-            LBlock[] blocks = BlockAnalysis.Order(entry);
+            var blocks = BlockAnalysis.Order(entry);
 
             if (!BlockAnalysis.IsReducible(blocks))
+            {
                 throw new Exception("control flow graph is not reducible");
+            }
 
             // Split critical edges in the graph (is this even needed?)
             BlockAnalysis.SplitCriticalEdges(blocks);
@@ -671,13 +692,19 @@ namespace Lysis
             BlockAnalysis.ComputeDominatorTree(blocks);
             BlockAnalysis.FindLoops(blocks);
 
-            LGraph graph = new LGraph();
-            graph.blocks = blocks;
-            graph.entry = blocks[0];
+            var graph = new LGraph
+            {
+                blocks = blocks,
+                entry = blocks[0]
+            };
             if (lir_.argDepth > 0)
+            {
                 graph.nargs = ((lir_.argDepth - 12) / 4) + 1;
+            }
             else
+            {
                 graph.nargs = 0;
+            }
 
             return graph;
         }

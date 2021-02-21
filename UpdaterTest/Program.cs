@@ -13,7 +13,7 @@ namespace UpdaterTest
     {
         private const string CurrentVersion = "1.3.5.0";
 
-        public static async Task Main(string[] args)
+        public static async Task Main()
         {
             var lat = await GetLatest();
             var release = lat.Assets.First(e => e.Name == "SPCode.Portable.zip");
@@ -47,7 +47,10 @@ namespace UpdaterTest
 
             // Dont override the sourcemod files
             var files = zip.Entries.Where(e => !e.FullName.StartsWith(@"sourcepawn\"));
-            foreach (var file in files) file.ExtractToFile("Update/" + file.FullName, true);
+            foreach (var file in files)
+            {
+                file.ExtractToFile("Update/" + file.FullName, true);
+            }
         }
         /*
          * 0 -> Major
@@ -61,17 +64,26 @@ namespace UpdaterTest
             var latestSplit = latest.Split('.').Select(int.Parse).ToList();
 
             if (currentSplit.Count != 4)
+            {
                 throw new ArgumentException("Invalid current version string", nameof(current));
-            
+            }
+
             if (currentSplit.Count != 4)
+            {
                 throw new ArgumentException("Invalid latest version string", nameof(latest));
-            
+            }
+
             for (var i = 0; i < currentSplit.Count; i++)
             {
                 if (latestSplit[i] > currentSplit[i])
+                {
                     return false;
+                }
+
                 if (latestSplit[i] < currentSplit[i])
+                {
                     return true;
+                }
             }
 
             return true;
@@ -80,7 +92,7 @@ namespace UpdaterTest
         private static async Task<Release> GetLatest()
         {
             var client = new GitHubClient(new ProductHeaderValue("spcode-client"));
-            var releases = await client.Repository.Release.GetAll("Hexer10", "Spcode");
+            var releases = await client.Repository.Release.GetAll("Hexer10", "SPCode");
             return releases[0];
         }
     }

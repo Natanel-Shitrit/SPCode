@@ -55,8 +55,11 @@ namespace SPCode.UI
         {
             InitializeComponent();
             if (Program.OptionsObject.Program_AccentColor != "Red" || Program.OptionsObject.Program_Theme != "BaseDark")
+            {
                 ThemeManager.ChangeAppStyle(this, ThemeManager.GetAccent(Program.OptionsObject.Program_AccentColor),
                     ThemeManager.GetAppTheme(Program.OptionsObject.Program_Theme));
+            }
+
             ObjectBrowserColumn.Width =
                 new GridLength(Program.OptionsObject.Program_ObjectbrowserWidth, GridUnitType.Pixel);
             var heightDescriptor =
@@ -70,25 +73,40 @@ namespace SPCode.UI
             CActionButton.SelectedIndex = 0;
             ReplaceButton.ItemsSource = findReplaceButtonDict;
             ReplaceButton.SelectedIndex = 0;
-            if (Program.OptionsObject.UI_ShowToolBar) Win_ToolBar.Height = double.NaN;
+            if (Program.OptionsObject.UI_ShowToolBar)
+            {
+                Win_ToolBar.Height = double.NaN;
+            }
+
+            ObjectBrowserDirList.ItemsSource = Program.Configs[Program.SelectedConfig].SMDirectories;
+            ObjectBrowserDirList.SelectedIndex = 0;
+
             MetroDialogOptions.AnimateHide = MetroDialogOptions.AnimateShow = false;
-            BlendOverEffect = (Storyboard) Resources["BlendOverEffect"];
-            FadeFindReplaceGridIn = (Storyboard) Resources["FadeFindReplaceGridIn"];
-            FadeFindReplaceGridOut = (Storyboard) Resources["FadeFindReplaceGridOut"];
-            EnableServerAnim = (Storyboard) Resources["EnableServerAnim"];
-            DisableServerAnim = (Storyboard) Resources["DisableServerAnim"];
+            BlendOverEffect = (Storyboard)Resources["BlendOverEffect"];
+            FadeFindReplaceGridIn = (Storyboard)Resources["FadeFindReplaceGridIn"];
+            FadeFindReplaceGridOut = (Storyboard)Resources["FadeFindReplaceGridOut"];
+            EnableServerAnim = (Storyboard)Resources["EnableServerAnim"];
+            DisableServerAnim = (Storyboard)Resources["DisableServerAnim"];
             ChangeObjectBrowserToDirectory(Program.OptionsObject.Program_ObjectBrowserDirectory);
             Language_Translate(true);
-#if DEBUG
-            TryLoadSourceFile(@"C:\Users\Jelle\Desktop\scripting\AeroControler.sp", false);
-#endif
+
             if (Program.OptionsObject.LastOpenFiles != null)
+            {
                 foreach (var file in Program.OptionsObject.LastOpenFiles)
+                {
                     TryLoadSourceFile(file, false);
+                }
+            }
+
             var args = Environment.GetCommandLineArgs();
             for (var i = 0; i < args.Length; ++i)
+            {
                 if (!args[i].EndsWith("exe"))
+                {
                     TryLoadSourceFile(args[i], false, true, i == 0);
+                }
+            }
+
             sc.Close(TimeSpan.FromMilliseconds(500.0));
             // StartBackgroundParserThread();
             FullyInitialized = true;
@@ -116,50 +134,68 @@ namespace SPCode.UI
 
                     var editors = GetAllEditorElements();
                     if (editors != null)
+                    {
                         foreach (var editor in editors)
+                        {
                             if (editor.FullFilePath == finalPath)
                             {
-                                if (SelectMe) editor.Parent.IsSelected = true;
+                                if (SelectMe)
+                                {
+                                    editor.Parent.IsSelected = true;
+                                }
+
                                 return true;
                             }
+                        }
+                    }
 
                     AddEditorElement(finalPath, fileInfo.Name, SelectMe);
                     if (TryOpenIncludes && Program.OptionsObject.Program_OpenCustomIncludes)
-                        using (var textReader = fileInfo.OpenText())
+                    {
+                        using var textReader = fileInfo.OpenText();
+                        var source = Regex.Replace(textReader.ReadToEnd(), @"/\*.*?\*/", string.Empty,
+                            RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.Singleline);
+                        var regex = new Regex(@"^\s*\#include\s+((\<|"")(?<name>.+?)(\>|""))",
+                            RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.Multiline);
+                        var mc = regex.Matches(source);
+                        for (var i = 0; i < mc.Count; ++i)
                         {
-                            var source = Regex.Replace(textReader.ReadToEnd(), @"/\*.*?\*/", string.Empty,
-                                RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.Singleline);
-                            var regex = new Regex(@"^\s*\#include\s+((\<|"")(?<name>.+?)(\>|""))",
-                                RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.Multiline);
-                            var mc = regex.Matches(source);
-                            for (var i = 0; i < mc.Count; ++i)
-                                try
+                            try
+                            {
+                                var fileName = mc[i].Groups["name"].Value;
+                                if (!(fileName.EndsWith(".inc", StringComparison.InvariantCultureIgnoreCase) ||
+                                      fileName.EndsWith(".sp", StringComparison.InvariantCultureIgnoreCase)))
                                 {
-                                    var fileName = mc[i].Groups["name"].Value;
-                                    if (!(fileName.EndsWith(".inc", StringComparison.InvariantCultureIgnoreCase) ||
-                                          fileName.EndsWith(".sp", StringComparison.InvariantCultureIgnoreCase)))
-                                        fileName = fileName + ".inc";
-                                    fileName = Path.Combine(
-                                        fileInfo.DirectoryName ?? throw new NullReferenceException(), fileName);
-                                    TryLoadSourceFile(fileName, false,
-                                        Program.OptionsObject.Program_OpenIncludesRecursively);
+                                    fileName += ".inc";
                                 }
-                                catch (Exception)
-                                {
-                                    // ignored
-                                }
+
+                                fileName = Path.Combine(
+                                    fileInfo.DirectoryName ?? throw new NullReferenceException(), fileName);
+                                TryLoadSourceFile(fileName, false,
+                                    Program.OptionsObject.Program_OpenIncludesRecursively);
+                            }
+                            catch (Exception)
+                            {
+                                // ignored
+                            }
                         }
+                    }
                 }
                 else if (extension == "smx")
                 {
-                    var layoutDocument = new LayoutDocument {Title = "DASM: " + fileInfo.Name};
+                    var layoutDocument = new LayoutDocument { Title = "DASM: " + fileInfo.Name };
                     var dasmElement = new DASMElement(fileInfo);
                     layoutDocument.Content = dasmElement;
                     DockingPane.Children.Add(layoutDocument);
                     DockingPane.SelectedContentIndex = DockingPane.ChildrenCount - 1;
                 }
 
-                if (UseBlendoverEffect) BlendOverEffect.Begin();
+                if (UseBlendoverEffect)
+                {
+                    BlendOverEffect.Begin();
+                }
+                ChangeObjectBrowserToDirectory(fileInfo.DirectoryName);
+                ObjectBrowserButtonHolder.SelectedIndex = 0;
                 return true;
             }
 
@@ -168,13 +204,16 @@ namespace SPCode.UI
 
         private void AddEditorElement(string filePath, string name, bool SelectMe)
         {
-            var layoutDocument = new LayoutDocument {Title = name};
+            var layoutDocument = new LayoutDocument { Title = name };
             layoutDocument.ToolTip = filePath;
-            var editor = new EditorElement(filePath) {Parent = layoutDocument};
+            var editor = new EditorElement(filePath) { Parent = layoutDocument };
             layoutDocument.Content = editor;
             EditorsReferences.Add(editor);
             DockingPane.Children.Add(layoutDocument);
-            if (SelectMe) layoutDocument.IsSelected = true;
+            if (SelectMe)
+            {
+                layoutDocument.IsSelected = true;
+            }
         }
 
         private void DockingManager_ActiveContentChanged(object sender, EventArgs e)
@@ -185,16 +224,22 @@ namespace SPCode.UI
         private void DockingManager_DocumentClosed(object sender, DocumentClosedEventArgs e)
         {
             (e.Document.Content as EditorElement)?.Close();
-            var new_ee = GetCurrentEditorElement();
-            if (new_ee == null)
-            {
-                var er = EditorsReferences;
-                if (er.Count > 0)
-                {
-                    e.Document.Content = er[0];
-                }
-            }
             UpdateWindowTitle();
+        }
+
+        // Code taken from VisualPawn Editer (Not published yet)
+        private void DockingPaneGroup_ChildrenTreeChanged(object sender, ChildrenTreeChangedEventArgs e)
+        {
+            // if the active LayoutDocumentPane gets closed 
+            // 1. it will not be in the LayoutDocumentPaneGroup.
+            // 2. editor that get added to it will not be shown in the client.
+            // Solution: Set the active LayoutDocumentPane to the first LayoutDocumentPaneGroup avilable child.
+            if (e.Change == ChildrenTreeChange.DirectChildrenChanged
+                && !DockingPaneGroup.Children.Contains(DockingPane)
+                && DockingPaneGroup.Children[0] is LayoutDocumentPane pane)
+            {
+                DockingPane = pane;
+            }
         }
 
         private void MetroWindow_Closing(object sender, CancelEventArgs e)
@@ -204,7 +249,9 @@ namespace SPCode.UI
             var editors = GetAllEditorElements();
             bool? SaveUnsaved = null;
             if (editors != null)
+            {
                 foreach (var editor in editors)
+                {
                     if (File.Exists(editor.FullFilePath))
                     {
                         lastOpenFiles.Add(editor.FullFilePath);
@@ -219,17 +266,21 @@ namespace SPCode.UI
                             }
 
                             if (SaveUnsaved.Value)
+                            {
                                 editor.Close(true);
+                            }
                             else
+                            {
                                 editor.Close(false, false);
+                            }
                         }
                         else
                         {
                             editor.Close(false, false);
                         }
                     }
-
-            Properties.Settings.Default.Save();
+                }
+            }
 
             Program.OptionsObject.LastOpenFiles = lastOpenFiles.ToArray();
 
@@ -237,7 +288,7 @@ namespace SPCode.UI
 #if !DEBUG
             if (Program.UpdateStatus.IsAvailable)
             {
-                UpdateWindow updateWin = new UpdateWindow(Program.UpdateStatus) { Owner = this };
+                var updateWin = new UpdateWindow(Program.UpdateStatus) { Owner = this };
                 updateWin.ShowDialog();
             }
 #endif
@@ -247,11 +298,14 @@ namespace SPCode.UI
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 Activate();
                 Focus();
                 Debug.Assert(files != null, nameof(files) + " != null");
-                for (var i = 0; i < files.Length; ++i) TryLoadSourceFile(files[i], i == 0, true, i == 0);
+                for (var i = 0; i < files.Length; ++i)
+                {
+                    TryLoadSourceFile(files[i], i == 0, true, i == 0);
+                }
             }
         }
 
@@ -269,16 +323,25 @@ namespace SPCode.UI
 
         private void ErrorResultGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var row = (ErrorDataGridRow) ErrorResultGrid.SelectedItem;
-            if (row == null) return;
-            var fileName = row.file;
+            var row = (ErrorDataGridRow)ErrorResultGrid.SelectedItem;
+            if (row == null)
+            {
+                return;
+            }
+
+            var fileName = row.File;
             var editors = GetAllEditorElements();
-            if (editors == null) return;
+            if (editors == null)
+            {
+                return;
+            }
+
             foreach (var editor in editors)
+            {
                 if (editor.FullFilePath == fileName)
                 {
                     editor.Parent.IsSelected = true;
-                    var line = GetLineInteger(row.line);
+                    var line = GetLineInteger(row.Line);
                     if (line > 0 && line <= editor.editor.LineCount)
                     {
                         var lineObj = editor.editor.Document.Lines[line - 1];
@@ -286,6 +349,7 @@ namespace SPCode.UI
                         editor.editor.Select(lineObj.Offset, lineObj.Length);
                     }
                 }
+            }
         }
 
         private void CloseErrorResultGrid(object sender, RoutedEventArgs e)
@@ -295,14 +359,17 @@ namespace SPCode.UI
 
         private void EditorObjectBrowserGridRow_WidthChanged(object sender, EventArgs e)
         {
-            if (FullyInitialized) Program.OptionsObject.Program_ObjectbrowserWidth = ObjectBrowserColumn.Width.Value;
+            if (FullyInitialized)
+            {
+                Program.OptionsObject.Program_ObjectbrowserWidth = ObjectBrowserColumn.Width.Value;
+            }
         }
 
         public void UpdateWindowTitle()
         {
             var ee = GetCurrentEditorElement();
-            bool someEditorIsOpen = ee != null;
-            string outString = "Idle";
+            var someEditorIsOpen = ee != null;
+            var outString = "Idle";
             if (someEditorIsOpen)
             {
                 outString = ee.FullFilePath;
@@ -323,8 +390,12 @@ namespace SPCode.UI
                     }
                 });
             }
-            
-            if (ServerIsRunning) outString = $"{outString} | ({Program.Translations.GetLanguage("ServerRunning")})";
+
+            if (ServerIsRunning)
+            {
+                outString = $"{outString} | ({Program.Translations.GetLanguage("ServerRunning")})";
+            }
+
             Title = outString;
         }
 
@@ -332,12 +403,22 @@ namespace SPCode.UI
         {
             var end = 0;
             for (var i = 0; i < lineStr.Length; ++i)
+            {
                 if (lineStr[i] >= '0' && lineStr[i] <= '9')
+                {
                     end = i;
+                }
                 else
+                {
                     break;
+                }
+            }
 
-            if (int.TryParse(lineStr.Substring(0, end + 1), out var line)) return line;
+            if (int.TryParse(lineStr.Substring(0, end + 1), out var line))
+            {
+                return line;
+            }
+
             return -1;
         }
     }

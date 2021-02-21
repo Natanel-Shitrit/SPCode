@@ -26,6 +26,7 @@ namespace SourcepawnCondenser
                 var braceIndex = 0;
                 var lastIndex = -1;
                 for (; iteratePosition < length; ++iteratePosition)
+                {
                     if (t[iteratePosition].Kind == TokenKind.BraceOpen)
                     {
                         ++braceIndex;
@@ -89,6 +90,7 @@ namespace SourcepawnCondenser
                             var foundCurentParameter = false;
                             var InSearchForComma = false;
                             for (var i = iteratePosition; i < length; ++i)
+                            {
                                 if (InCodeSection)
                                 {
                                     if (t[i].Kind == TokenKind.BraceOpen)
@@ -192,26 +194,37 @@ namespace SourcepawnCondenser
                                         InSearchForComma = true;
                                     }
                                 }
+                            }
 
                             if (mStartIndex < mEndIndex)
+                            {
                                 methods.Add(new SMEnumStructMethod
                                 {
-                                    Index = mStartIndex, Name = methodName, ReturnType = methodReturnValue,
+                                    Index = mStartIndex,
+                                    Name = methodName,
+                                    ReturnType = methodReturnValue,
                                     MethodKind = functionIndicators.ToArray(),
                                     Parameters = parameters.ToArray(),
                                     FullName = TrimFullname(source.Substring(mStartIndex, mEndIndex - mStartIndex + 1)),
                                     Length = mEndIndex - mStartIndex + 1,
-                                    CommentString = TrimComments(functionCommentString), MethodmapName = enumStructName,
+                                    CommentString = TrimComments(functionCommentString),
+                                    MethodmapName = enumStructName,
                                     File = FileName
                                 });
+                            }
                         }
                         else if (t[iteratePosition].Kind == TokenKind.Identifier)
                         {
                             var fStartIndex = t[iteratePosition].Index;
                             var fEndIndex = fStartIndex;
                             if (iteratePosition - 1 >= 0)
+                            {
                                 if (t[iteratePosition - 1].Kind == TokenKind.FunctionIndicator)
+                                {
                                     fStartIndex = t[iteratePosition - 1].Index;
+                                }
+                            }
+
                             var fieldName = string.Empty;
                             var InPureSemicolonSearch = false;
                             var fBracketIndex = 0;
@@ -230,12 +243,14 @@ namespace SourcepawnCondenser
                                 }
 
                                 if (t[j].Kind == TokenKind.Semicolon)
+                                {
                                     if (fStartIndex == fEndIndex && fBracketIndex == 0)
                                     {
                                         iteratePosition = j;
                                         fEndIndex = t[j].Index;
                                         break;
                                     }
+                                }
 
                                 if (t[j].Kind == TokenKind.BraceOpen)
                                 {
@@ -255,9 +270,13 @@ namespace SourcepawnCondenser
                                         if (j + 1 < length)
                                         {
                                             if (t[j + 1].Kind == TokenKind.Semicolon)
+                                            {
                                                 iteratePosition = j + 1;
+                                            }
                                             else
+                                            {
                                                 iteratePosition = j;
+                                            }
                                         }
 
                                         break;
@@ -266,6 +285,7 @@ namespace SourcepawnCondenser
                             }
 
                             if (fStartIndex < fEndIndex)
+                            {
                                 fields.Add(new SMEnumStructField
                                 {
                                     Index = fStartIndex,
@@ -275,14 +295,18 @@ namespace SourcepawnCondenser
                                     MethodmapName = enumStructName,
                                     FullName = source.Substring(fStartIndex, fEndIndex - fStartIndex + 1)
                                 });
+                            }
                         }
                     }
+                }
 
                 if (enteredBlock && braceIndex == 0)
                 {
                     var mm = new SMEnumStruct
                     {
-                        Index = startIndex, Length = t[lastIndex].Index - startIndex + 1, Name = enumStructName,
+                        Index = startIndex,
+                        Length = t[lastIndex].Index - startIndex + 1,
+                        Name = enumStructName,
                         File = FileName,
                     };
                     mm.Methods.AddRange(methods);
@@ -295,9 +319,5 @@ namespace SourcepawnCondenser
             return -1;
         }
 
-        private int ConsumeSMFunctionStruct()
-        {
-            return -1;
-        }
     }
 }

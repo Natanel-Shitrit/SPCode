@@ -1,8 +1,7 @@
-﻿using SPCode.UI.Components;
-using SPCode.UI.Windows;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using ICSharpCode.AvalonEdit.Highlighting;
+using SPCode.UI.Components;
+using SPCode.UI.Windows;
 
 namespace SPCode.UI
 {
@@ -11,30 +10,32 @@ namespace SPCode.UI
         public void FillConfigMenu()
         {
             ConfigMenu.Items.Clear();
-            for (int i = 0; i < Program.Configs.Length; ++i)
+            for (var i = 0; i < Program.Configs.Length; ++i)
             {
-                MenuItem item = new MenuItem
+                var item = new MenuItem
                 {
-                    Header = Program.Configs[i].Name, IsCheckable = true, IsChecked = (i == Program.SelectedConfig)
+                    Header = Program.Configs[i].Name,
+                    IsCheckable = true,
+                    IsChecked = i == Program.SelectedConfig
                 };
-                item.Click += item_Click;
+                item.Click += Item_Click;
                 ConfigMenu.Items.Add(item);
             }
             ConfigMenu.Items.Add(new Separator());
-            MenuItem editItem = new MenuItem() { Header = Program.Translations.GetLanguage("EditConfig") };
-            editItem.Click += editItem_Click;
+            var editItem = new MenuItem() { Header = Program.Translations.GetLanguage("EditConfig") };
+            editItem.Click += EditItem_Click;
             ConfigMenu.Items.Add(editItem);
         }
 
-        private void editItem_Click(object sender, RoutedEventArgs e)
+        private void EditItem_Click(object sender, RoutedEventArgs e)
         {
-            ConfigWindow configWindow = new ConfigWindow() { Owner = this, ShowInTaskbar = false };
+            var configWindow = new ConfigWindow() { Owner = this, ShowInTaskbar = false };
             configWindow.ShowDialog();
         }
 
-        private void item_Click(object sender, RoutedEventArgs e)
+        private void Item_Click(object sender, RoutedEventArgs e)
         {
-            string name = (string)(((MenuItem)sender).Header);
+            var name = (string)((MenuItem)sender).Header;
             ChangeConfig(name);
         }
 
@@ -45,15 +46,15 @@ namespace SPCode.UI
                 return;
             }
             Program.Configs[index].LoadSMDef();
-            string name = Program.Configs[index].Name;
-            for (int i = 0; i < ConfigMenu.Items.Count - 2; ++i)
+            var name = Program.Configs[index].Name;
+            for (var i = 0; i < ConfigMenu.Items.Count - 2; ++i)
             {
-                ((MenuItem)ConfigMenu.Items[i]).IsChecked = (name == (string)(((MenuItem)ConfigMenu.Items[i]).Header));
+                ((MenuItem)ConfigMenu.Items[i]).IsChecked = name == (string)((MenuItem)ConfigMenu.Items[i]).Header;
             }
             Program.SelectedConfig = index;
             Program.OptionsObject.Program_SelectedConfig = Program.Configs[Program.SelectedConfig].Name;
-            EditorElement[] editors = GetAllEditorElements();
-			if (editors != null)
+            var editors = GetAllEditorElements();
+            if (editors != null)
             {
                 foreach (var editor in editors)
                 {
@@ -62,11 +63,14 @@ namespace SPCode.UI
                     editor.InvalidateVisual();
                 }
             }
+            ObjectBrowserDirList.ItemsSource = Program.Configs[index].SMDirectories;
+            ObjectBrowserDirList.Items.Refresh();
+            ObjectBrowserDirList.SelectedIndex = 0;
         }
 
         private void ChangeConfig(string name)
         {
-            for (int i = 0; i < Program.Configs.Length; ++i)
+            for (var i = 0; i < Program.Configs.Length; ++i)
             {
                 if (Program.Configs[i].Name == name)
                 {

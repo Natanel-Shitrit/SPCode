@@ -18,18 +18,24 @@ namespace SourcepawnCondenser
                     if (t[i].Kind == TokenKind.Semicolon)
                     {
                         if (!foundIdentifier)
+                        {
                             if (t[i - 1].Kind == TokenKind.Identifier)
                             {
                                 constantName = t[i - 1].Value;
-                                foundIdentifier = true;
                             }
+                        }
 
                         if (!string.IsNullOrWhiteSpace(constantName))
+                        {
                             def.Constants.Add(new SMConstant
                             {
-                                Index = startIndex, Length = t[i].Index - startIndex, File = FileName,
+                                Index = startIndex,
+                                Length = t[i].Index - startIndex,
+                                File = FileName,
                                 Name = constantName
                             });
+                        }
+
                         return i;
                     }
 
@@ -45,11 +51,13 @@ namespace SourcepawnCondenser
                     else if (t[i].Kind == TokenKind.Character && !foundAssignment)
                     {
                         if (t[i].Value == "[")
+                        {
                             if (t[i - 1].Kind == TokenKind.Identifier)
                             {
                                 foundIdentifier = true;
                                 constantName = t[i - 1].Value;
                             }
+                        }
                     }
                     else if (t[i].Kind == TokenKind.EOL) //failsafe
                     {

@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Xml;
 using System.Windows;
+using System.Xml;
 
 namespace SPCode.Interop
 {
-	public class TranslationProvider
-	{
-		public string[] AvailableLanguageIDs;
-		public string[] AvailableLanguages;
+    public class TranslationProvider
+    {
+        public string[] AvailableLanguageIDs;
+        public string[] AvailableLanguages;
 
-		public bool IsDefault = true;
+        public bool IsDefault = true;
 
 
         private readonly Dictionary<string, string> language = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -34,71 +30,72 @@ namespace SPCode.Interop
         }
 
         public void LoadLanguage(string lang, bool Initial = false)
-		{
-			FillToEnglishDefaults();
-			List<string> languageList = new List<string>();
-			List<string> languageIDList = new List<string>();
-			languageList.Add("English");
-			languageIDList.Add("");
-			lang = lang.Trim().ToLowerInvariant();
-			IsDefault = (string.IsNullOrEmpty(lang) || lang.ToLowerInvariant() == "en") && Initial;
-			if (File.Exists("lang_0_spcode.xml"))
-			{
-				try
-				{
-					XmlDocument document = new XmlDocument();
-					document.Load("lang_0_spcode.xml");
-					if (document.ChildNodes.Count < 1)
-					{
-						throw new Exception("No Root-Node: \"translations\" found");
-					}
+        {
+            FillToEnglishDefaults();
+            var languageList = new List<string>();
+            var languageIDList = new List<string>();
+            languageList.Add("English");
+            languageIDList.Add("");
+            lang = lang.Trim().ToLowerInvariant();
+            IsDefault = (string.IsNullOrEmpty(lang) || lang.ToLowerInvariant() == "en") && Initial;
+            if (File.Exists("lang_0_spcode.xml"))
+            {
+                try
+                {
+                    var document = new XmlDocument();
+                    document.Load("lang_0_spcode.xml");
+                    if (document.ChildNodes.Count < 1)
+                    {
+                        throw new Exception("No Root-Node: \"translations\" found");
+                    }
 
-					XmlNode rootLangNode = null;
-					foreach (XmlNode childNode in document.ChildNodes[0].ChildNodes)
-					{
-						string lID = childNode.Name;
-						string lNm = lID;
-						if (childNode.Name.ToLowerInvariant() == lang)
-						{
-							rootLangNode = childNode;
-						}
-						if (childNode.FirstChild.Name.ToLowerInvariant() == "language")
-						{
-							lNm = childNode.FirstChild.InnerText;
-						}
-						languageList.Add(lNm);
-						languageIDList.Add(lID);
-					}
-					if (rootLangNode != null)
-					{
-						foreach (XmlNode node in rootLangNode.ChildNodes)
-						{
-							if (node.NodeType == XmlNodeType.Comment)
-							{
-								continue;
-							}
-							string nn = node.Name.ToLowerInvariant();
-							string nv = node.InnerText;
+                    XmlNode rootLangNode = null;
+                    foreach (XmlNode childNode in document.ChildNodes[0].ChildNodes)
+                    {
+                        var lID = childNode.Name;
+                        var lNm = lID;
+                        if (childNode.Name.ToLowerInvariant() == lang)
+                        {
+                            rootLangNode = childNode;
+                        }
+                        if (childNode.FirstChild.Name.ToLowerInvariant() == "language")
+                        {
+                            lNm = childNode.FirstChild.InnerText;
+                        }
+                        languageList.Add(lNm);
+                        languageIDList.Add(lID);
+                    }
+                    if (rootLangNode != null)
+                    {
+                        foreach (XmlNode node in rootLangNode.ChildNodes)
+                        {
+                            if (node.NodeType == XmlNodeType.Comment)
+                            {
+                                continue;
+                            }
+                            var nn = node.Name.ToLowerInvariant();
+                            var nv = node.InnerText;
                             language[nn] = nv;
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					MessageBox.Show("An error occured while reading the language-file. Without them, the editor wont show translations." + Environment.NewLine + "Details: " + e.Message
-						, "Error while reading configs."
-						, MessageBoxButton.OK
-						, MessageBoxImage.Warning);
-				}
-			}
-			AvailableLanguages = languageList.ToArray();
-			AvailableLanguageIDs = languageIDList.ToArray();
-		}
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("An error occured while reading the language-file. Without them, the editor wont show translations." + Environment.NewLine + "Details: " + e.Message
+                        , "Error while reading configs."
+                        , MessageBoxButton.OK
+                        , MessageBoxImage.Warning);
+                }
+            }
+            AvailableLanguages = languageList.ToArray();
+            AvailableLanguageIDs = languageIDList.ToArray();
+        }
 
-		private void FillToEnglishDefaults()
-		{
-			language.Clear();
-			language.Add("Language", "English");
+        private void FillToEnglishDefaults()
+        {
+            language.Clear();
+            language.Add("File", "File");
+            language.Add("Language", "English");
             language.Add("ServerRunning", "Server running");
             language.Add("Saving", "Saving");
             language.Add("SavingUFiles", "Save all unsaved files?");
@@ -176,6 +173,7 @@ namespace SPCode.Interop
             language.Add("Decompile", "Decompile");
             language.Add("ReportBugGit", "Report bug on GitHub");
             language.Add("CheckUpdates", "Check for updates");
+            language.Add("CheckingUpdates", "Checking for updates");
             language.Add("About", "About");
             language.Add("FileName", "File Name");
             language.Add("Line", "Line");
@@ -251,7 +249,7 @@ namespace SPCode.Interop
             language.Add("ComPluginsUnload", "Unloads all compiled plugins");
             language.Add("NewConfig", "New config");
             language.Add("CannotDelConf", "Cannot delete config");
-            language.Add("YCannotDelConf", "You cannot delete this config.");
+            language.Add("YCannotDelConf", "You cannot delete the default config.");
             language.Add("SelectExe", "Select executable");
             language.Add("CMDLineCom", "Commandline variables");
             language.Add("RConCMDLineCom", "Rcon commandline variables");
@@ -295,6 +293,31 @@ namespace SPCode.Interop
             language.Add("CopyingFiles", "Copying files");
             language.Add("FTPUploading", "Uploading files");
             language.Add("RCONCommand", "Seconding RCON Commands");
-		}
-	}
+            language.Add("JavaInstallCheck", "Checking for Java installation");
+            language.Add("JavaNotFoundTitle", "Java was not found");
+            language.Add("JavaNotFoundMessage", 
+                "SPCode needs Java to decompile plugins, but it couldn't get it to work properly - " +
+                "perhaps due to an absent or incorrect Java installation. " +
+                "Do you wish to download and install it now?");
+            language.Add("JavaOutdatedTitle", "Java version found is outdated");
+            language.Add("JavaOutdatedMessage", 
+                "SPCode requires Java 11 SDK or later to decompile plugins. " +
+                "We found an outdated version in your system. " +
+                "Do you wish to download and upgrade it now?");
+            language.Add("FailedToDecompile", "failed to decompile");
+            language.Add("DownloadingJava", "Downloading Java");
+            language.Add("FetchingJava", "Fetching installation file from https://adoptopenjdk.net...");
+            language.Add("AmountCompleted", "completed");
+            language.Add("AmountDownloaded", "downloaded");
+            language.Add("JavaOpened", "Java installation file opened");
+            language.Add("JavaSuggestRestart", "After installing Java, it is highly recommended to restart SPCode.");
+            language.Add("JavaDownErrorTitle", "Java download error");
+            language.Add("JavaDownErrorMessage", "SPCode could not download Java by itself. Would you like to download it manually?");
+            language.Add("JavaOpenedBrowser", "Java download link opened in browser");
+            language.Add("ErrorSavingConfigs", "Could not save the current configs state");
+            language.Add("DuplicateConfigNames", "You cannot have 2 configs or more with the same name.");
+            language.Add("EmptyConfigNames", "You cannot have configs with an empty name.");
+            language.Add("DefaultValues", "Default values");
+        }
+    }
 }

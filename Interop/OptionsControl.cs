@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Windows.Media;
+using SPCode.Utils;
 
 namespace SPCode //leave this here instead of .Interop because of reasons...
 {
@@ -76,12 +77,18 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
 
         public void FillNullToDefaults()
         {
-            if (Program_CryptoKey == null) ReCreateCryptoKey();
+            if (Program_CryptoKey == null)
+            {
+                ReCreateCryptoKey();
+            }
 
             if (SVersion > Version)
             {
                 Program.ClearUpdateFiles();
-                if (Version < 2) UI_ShowToolBar = false;
+                if (Version < 2)
+                {
+                    UI_ShowToolBar = false;
+                }
 
                 if (Version < 3)
                 {
@@ -90,9 +97,15 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
                     Program_CheckForUpdates = true;
                 }
 
-                if (Version < 4) Editor_ReplaceTabsToWhitespace = false;
+                if (Version < 4)
+                {
+                    Editor_ReplaceTabsToWhitespace = false;
+                }
 
-                if (Version < 5) Program_DynamicISAC = true;
+                if (Version < 5)
+                {
+                    Program_DynamicISAC = true;
+                }
 
                 if (Version < 7)
                 {
@@ -101,7 +114,10 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
                     NormalizeSHColors();
                 }
 
-                if (Version < 8) Editor_AutoCloseBrackets = true;
+                if (Version < 8)
+                {
+                    Editor_AutoCloseBrackets = true;
+                }
 
                 if (Version < 9)
                 {
@@ -118,11 +134,18 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
                     Program.MakeRCCKAlert();
                 }
 
-                if (Version < 10) Program_UseHardwareSalts = true;
+                if (Version < 10)
+                {
+                    Program_UseHardwareSalts = true;
+                }
 
                 if (Version < 11)
+                {
                     if (Program_AccentColor == "Cyan")
+                    {
                         Program_AccentColor = "Blue";
+                    }
+                }
 
                 //new Optionsversion - reset new fields to default
                 Version = SVersion; //then Update Version afterwars
@@ -141,7 +164,7 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
             Program_CryptoKey = buffer;
         }
 
-        private void NormalizeSHColors()
+        public void NormalizeSHColors()
         {
             SH_Comments = new SerializeableColor(0xFF, 0x57, 0xA6, 0x49);
             SH_CommentsMarker = new SerializeableColor(0xFF, 0xFF, 0x20, 0x20);
@@ -196,12 +219,10 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
             try
             {
                 var formatter = new BinaryFormatter();
-                using (var fileStream = new FileStream("options_0.dat", FileMode.Create, FileAccess.ReadWrite,
-                    FileShare.None))
-                {
-                    formatter.Serialize(fileStream, Program.OptionsObject);
-                    var test = Program.OptionsObject;
-                }
+                using var fileStream = new FileStream(Paths.GetOptionsFilePath(), FileMode.Create, FileAccess.ReadWrite,
+                    FileShare.None);
+                formatter.Serialize(fileStream, Program.OptionsObject);
+                var test = Program.OptionsObject;
             }
             catch (Exception)
             {
@@ -212,17 +233,17 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
         {
             try
             {
-                if (File.Exists("options_0.dat"))
+                if (File.Exists(Paths.GetOptionsFilePath()))
                 {
                     object deserializedOptionsObj;
                     var formatter = new BinaryFormatter();
-                    using (var fileStream = new FileStream("options_0.dat", FileMode.Open, FileAccess.Read,
+                    using (var fileStream = new FileStream(Paths.GetOptionsFilePath(), FileMode.Open, FileAccess.Read,
                         FileShare.ReadWrite))
                     {
                         deserializedOptionsObj = formatter.Deserialize(fileStream);
                     }
 
-                    var oc = (OptionsControl) deserializedOptionsObj;
+                    var oc = (OptionsControl)deserializedOptionsObj;
                     oc.FillNullToDefaults();
                     ProgramIsNew = false;
                     return oc;
@@ -237,7 +258,7 @@ namespace SPCode //leave this here instead of .Interop because of reasons...
 #if DEBUG
             ProgramIsNew = false;
 #else
-			ProgramIsNew = true;
+            ProgramIsNew = true;
 #endif
             return oco;
         }

@@ -5,9 +5,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using SpcodeUpdater.Properties;
+using SPCodeUpdater.Properties;
 
-namespace SpcodeUpdater
+namespace SPCodeUpdater
 {
     public static class Program
     {
@@ -16,8 +16,9 @@ namespace SpcodeUpdater
         [STAThread]
         public static void Main()
         {
-            var processes = Process.GetProcessesByName("Spcode");
+            var processes = Process.GetProcessesByName("SPCode");
             foreach (var process in processes)
+            {
                 try
                 {
                     process.WaitForExit();
@@ -26,7 +27,7 @@ namespace SpcodeUpdater
                 {
                     // ignored
                 }
-
+            }
 
             Application.EnableVisualStyles();
             Thread.Sleep(2000);
@@ -41,7 +42,7 @@ namespace SpcodeUpdater
 
         private static void Worker(object arg)
         {
-            var um = (UpdateMarquee) arg;
+            var um = (UpdateMarquee)arg;
             var zipFile = Path.Combine(Environment.CurrentDirectory, "updateZipFile.zip");
 
             var zipFileContent = Resources.Update;
@@ -54,12 +55,15 @@ namespace SpcodeUpdater
             {
                 // Dont override the sourcemod files
                 var files = archive.Entries.Where(e => !e.FullName.StartsWith(@"sourcepawn\"));
-                foreach (var file in files) file.ExtractToFile(file.FullName, true);
+                foreach (var file in files)
+                {
+                    file.ExtractToFile(file.FullName, true);
+                }
             }
 
             zipInfo.Delete();
 
-            um.Invoke((InvokeDel) (() => { um.SetToReadyState(); }));
+            um.Invoke((InvokeDel)(() => { um.SetToReadyState(); }));
         }
     }
 }

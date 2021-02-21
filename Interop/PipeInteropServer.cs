@@ -1,14 +1,14 @@
-﻿using SPCode.UI;
-using System;
+﻿using System;
 using System.IO.Pipes;
 using System.Text;
+using SPCode.UI;
 
 namespace SPCode.Interop
 {
     public class PipeInteropServer : IDisposable
     {
-        NamedPipeServerStream pipeServer;
-        MainWindow _window;
+        private NamedPipeServerStream pipeServer;
+        private readonly MainWindow _window;
 
         public PipeInteropServer(MainWindow window)
         {
@@ -25,10 +25,10 @@ namespace SPCode.Interop
             pipeServer.Close();
         }
 
-		public void Dispose()
-		{
-			pipeServer.Close();
-		}
+        public void Dispose()
+        {
+            pipeServer.Close();
+        }
 
         private void StartInteropServer()
         {
@@ -44,15 +44,15 @@ namespace SPCode.Interop
         private void PipeConnection_MessageIn(IAsyncResult iar)
         {
             pipeServer.EndWaitForConnection(iar);
-            byte[] byteBuffer = new byte[4];
-            pipeServer.Read(byteBuffer, 0, sizeof(Int32));
-            int length = BitConverter.ToInt32(byteBuffer, 0);
+            var byteBuffer = new byte[4];
+            pipeServer.Read(byteBuffer, 0, sizeof(int));
+            var length = BitConverter.ToInt32(byteBuffer, 0);
             byteBuffer = new byte[length];
             pipeServer.Read(byteBuffer, 0, length);
-            string data = Encoding.UTF8.GetString(byteBuffer);
-            string[] files = data.Split('|');
-			bool SelectIt = true;
-            for (int i = 0; i < files.Length; ++i)
+            var data = Encoding.UTF8.GetString(byteBuffer);
+            var files = data.Split('|');
+            var SelectIt = true;
+            for (var i = 0; i < files.Length; ++i)
             {
                 _window.Dispatcher.Invoke(() =>
                 {
@@ -61,8 +61,8 @@ namespace SPCode.Interop
                         if (_window.TryLoadSourceFile(files[i], SelectIt) && _window.WindowState == System.Windows.WindowState.Minimized)
                         {
                             _window.WindowState = System.Windows.WindowState.Normal;
-							SelectIt = false;
-						}
+                            SelectIt = false;
+                        }
                     }
                 });
             }

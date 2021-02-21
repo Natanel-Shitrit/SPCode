@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using SPCode.Interop.Updater;
 using SPCode.UI.Windows;
+using SPCode.Utils;
 
 namespace SPCode.UI
 {
@@ -15,13 +16,17 @@ namespace SPCode.UI
         {
             var editors = GetAllEditorElements();
             var EditorsAreOpen = false;
-            if (editors != null) EditorsAreOpen = editors.Length > 0;
+            if (editors != null)
+            {
+                EditorsAreOpen = editors.Length > 0;
+            }
+
             var EditorIsSelected = GetCurrentEditorElement() != null;
-            ((MenuItem) ((MenuItem) sender).Items[3]).IsEnabled = EditorIsSelected;
-            ((MenuItem) ((MenuItem) sender).Items[5]).IsEnabled = EditorIsSelected;
-            ((MenuItem) ((MenuItem) sender).Items[7]).IsEnabled = EditorIsSelected;
-            ((MenuItem) ((MenuItem) sender).Items[4]).IsEnabled = EditorsAreOpen;
-            ((MenuItem) ((MenuItem) sender).Items[8]).IsEnabled = EditorsAreOpen;
+            ((MenuItem)((MenuItem)sender).Items[3]).IsEnabled = EditorIsSelected;
+            ((MenuItem)((MenuItem)sender).Items[5]).IsEnabled = EditorIsSelected;
+            ((MenuItem)((MenuItem)sender).Items[7]).IsEnabled = EditorIsSelected;
+            ((MenuItem)((MenuItem)sender).Items[4]).IsEnabled = EditorsAreOpen;
+            ((MenuItem)((MenuItem)sender).Items[8]).IsEnabled = EditorsAreOpen;
         }
 
         private void Menu_New(object sender, RoutedEventArgs e)
@@ -62,20 +67,28 @@ namespace SPCode.UI
         private void EditMenu_Open(object sender, RoutedEventArgs e)
         {
             var ee = GetCurrentEditorElement();
-            var menu = (MenuItem) sender;
+            var menu = (MenuItem)sender;
             if (ee == null)
             {
                 foreach (var item in menu.Items)
+                {
                     if (item is MenuItem menuItem)
+                    {
                         menuItem.IsEnabled = false;
+                    }
+                }
             }
             else
             {
                 MenuI_Undo.IsEnabled = ee.editor.CanUndo;
                 MenuI_Redo.IsEnabled = ee.editor.CanRedo;
                 for (var i = 2; i < menu.Items.Count; ++i)
-                    if (menu.Items[i] is MenuItem)
-                        ((MenuItem) menu.Items[i]).IsEnabled = true;
+                {
+                    if (menu.Items[i] is MenuItem item)
+                    {
+                        item.IsEnabled = true;
+                    }
+                }
             }
         }
 
@@ -167,25 +180,25 @@ namespace SPCode.UI
 
         private void Menu_OpenWebsiteFromTag(object sender, RoutedEventArgs e)
         {
-            var url = (string) ((MenuItem) sender).Tag;
+            var url = (string)((MenuItem)sender).Tag;
             Process.Start(new ProcessStartInfo(url));
         }
 
         private void Menu_About(object sender, RoutedEventArgs e)
         {
-            var aboutWindow = new AboutWindow {Owner = this, ShowInTaskbar = false};
+            var aboutWindow = new AboutWindow { Owner = this, ShowInTaskbar = false };
             aboutWindow.ShowDialog();
         }
 
         private void Menu_OpenSPDef(object sender, RoutedEventArgs e)
         {
-            var spDefinitionWindow = new SPDefinitionWindow {Owner = this, ShowInTaskbar = false};
+            var spDefinitionWindow = new SPDefinitionWindow { Owner = this, ShowInTaskbar = false };
             spDefinitionWindow.ShowDialog();
         }
 
         private void Menu_OpenOptions(object sender, RoutedEventArgs e)
         {
-            var optionsWindow = new OptionsWindow {Owner = this, ShowInTaskbar = false};
+            var optionsWindow = new OptionsWindow { Owner = this, ShowInTaskbar = false };
             optionsWindow.ShowDialog();
         }
 
@@ -206,16 +219,20 @@ namespace SPCode.UI
 
         private void ReportBug_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo(@"https://github.com/Hexer10/SPCode/issues/new"));
+            Process.Start(new ProcessStartInfo(Constants.GitHubNewIssueLink));
         }
 
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
         {
+            var updatingWindow = await this.ShowProgressAsync(Program.Translations.GetLanguage("CheckingUpdates") + "...", "", false, MetroDialogOptions);
+            updatingWindow.SetIndeterminate();
+
             await UpdateCheck.Check();
             var status = Program.UpdateStatus;
             if (status.IsAvailable)
             {
-                var uWindow = new UpdateWindow(status) {Owner = this};
+                await updatingWindow.CloseAsync();
+                var uWindow = new UpdateWindow(status) { Owner = this };
                 uWindow.ShowDialog();
                 if (uWindow.Succeeded)
                 {
@@ -231,16 +248,21 @@ namespace SPCode.UI
             }
             else
             {
+                await updatingWindow.CloseAsync();
                 if (status.GotException)
+                {
                     await this.ShowMessageAsync(Program.Translations.GetLanguage("FailedCheck"),
                         Program.Translations.GetLanguage("ErrorUpdate") + Environment.NewLine +
                         $"{Program.Translations.GetLanguage("Details")}: " + status.ExceptionMessage
                         , MessageDialogStyle.Affirmative, MetroDialogOptions);
+                }
                 else
+                {
                     await this.ShowMessageAsync(Program.Translations.GetLanguage("VersUpToDate"),
                         string.Format(Program.Translations.GetLanguage("VersionYour"),
                             Assembly.GetEntryAssembly()?.GetName().Version)
                         , MessageDialogStyle.Affirmative, MetroDialogOptions);
+                }
             }
         }
 
@@ -248,19 +270,30 @@ namespace SPCode.UI
         {
             var selected = CompileButton.SelectedIndex;
             if (selected == 1)
+            {
                 Compile_SPScripts(false);
+            }
             else
+            {
                 Compile_SPScripts();
+            }
         }
 
         private void MenuButton_Action(object sender, RoutedEventArgs e)
         {
             var selected = CActionButton.SelectedIndex;
             if (selected == 0)
+            {
                 Copy_Plugins();
+            }
             else if (selected == 1)
+            {
                 FTPUpload_Plugins();
-            else if (selected == 2) Server_Start();
+            }
+            else if (selected == 2)
+            {
+                Server_Start();
+            }
         }
     }
 }

@@ -41,6 +41,7 @@ namespace SourcepawnCondenser.SourcemodDefinition
         public List<SMTypedef> Typedefs = new List<SMTypedef>();
         public string[] TypeStrings = new string[0];
         public List<SMVariable> Variables = new List<SMVariable>();
+        public SMFunction currentFunction;
 
         public void Sort()
         {
@@ -66,24 +67,33 @@ namespace SourcepawnCondenser.SourcemodDefinition
         public void AppendFiles(IEnumerable<string> paths)
         {
             foreach (var path in paths)
+            {
                 if (Directory.Exists(path))
                 {
-                    var files = Directory.GetFiles(path, "*.inc", SearchOption.AllDirectories);
-                    foreach (var file in files)
+                    try
                     {
-                        var fInfo = new FileInfo(file);
-                        var subCondenser = new Condenser(File.ReadAllText(fInfo.FullName), fInfo.Name);
-                        var subDefinition = subCondenser.Condense();
-                        Functions.AddRange(subDefinition.Functions);
-                        Enums.AddRange(subDefinition.Enums);
-                        Structs.AddRange(subDefinition.Structs);
-                        Defines.AddRange(subDefinition.Defines);
-                        Constants.AddRange(subDefinition.Constants);
-                        Methodmaps.AddRange(subDefinition.Methodmaps);
-                        Typedefs.AddRange(subDefinition.Typedefs);
-                        EnumStructs.AddRange(subDefinition.EnumStructs);
+                        var files = Directory.GetFiles(path, "*.inc", SearchOption.AllDirectories);
+                        foreach (var file in files)
+                        {
+                            var fInfo = new FileInfo(file);
+                            var subCondenser = new Condenser(File.ReadAllText(fInfo.FullName), fInfo.Name);
+                            var subDefinition = subCondenser.Condense();
+                            Functions.AddRange(subDefinition.Functions);
+                            Enums.AddRange(subDefinition.Enums);
+                            Structs.AddRange(subDefinition.Structs);
+                            Defines.AddRange(subDefinition.Defines);
+                            Constants.AddRange(subDefinition.Constants);
+                            Methodmaps.AddRange(subDefinition.Methodmaps);
+                            Typedefs.AddRange(subDefinition.Typedefs);
+                            EnumStructs.AddRange(subDefinition.EnumStructs);
+                        }
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // ignored
                     }
                 }
+            }
 
             // var editor = Program.MainWindow.GetCurrentEditorElement();
 
@@ -94,7 +104,11 @@ namespace SourcepawnCondenser.SourcemodDefinition
         private void ProduceStringArrays(int caret = -1, List<SMFunction> currentFunctions = null)
         {
             FunctionStrings = new string[Functions.Count];
-            for (var i = 0; i < Functions.Count; ++i) FunctionStrings[i] = Functions[i].Name;
+            for (var i = 0; i < Functions.Count; ++i)
+            {
+                FunctionStrings[i] = Functions[i].Name;
+            }
+
             var methodNames = new List<string>();
             var fieldNames = new List<string>();
             var methodmapNames = new List<string>();
@@ -124,7 +138,10 @@ namespace SourcepawnCondenser.SourcemodDefinition
             EnumStructStrings = enumStructNames.ToArray();
 
             var constantNames = Constants.Select(i => i.Name).ToList();
-            foreach (var e in Enums) constantNames.AddRange(e.Entries);
+            foreach (var e in Enums)
+            {
+                constantNames.AddRange(e.Entries);
+            }
 
             constantNames.AddRange(Defines.Select(i => i.Name));
             constantNames.AddRange(Variables.Select(v => v.Name));
@@ -166,8 +183,10 @@ namespace SourcepawnCondenser.SourcemodDefinition
 
         public ACNode[] ProduceACNodes()
         {
-            var nodes = new List<ACNode>();
-            nodes.Capacity = Enums.Count + Structs.Count + Constants.Count + Functions.Count + EnumStructs.Count;
+            var nodes = new List<ACNode>
+            {
+                Capacity = Enums.Count + Structs.Count + Constants.Count + Functions.Count + EnumStructs.Count
+            };
             nodes.AddRange(ACNode.ConvertFromStringArray(FunctionStrings, true, "▲ "));
             nodes.AddRange(ACNode.ConvertFromStringArray(TypeStrings, false, "♦ "));
             nodes.AddRange(ACNode.ConvertFromStringArray(ConstantsStrings, false, "• "));
@@ -221,8 +240,12 @@ namespace SourcepawnCondenser.SourcemodDefinition
             var def = new SMDefinition();
             def.MergeDefinitions(this);
             foreach (var definition in definitions)
+            {
                 if (definition != null)
+                {
                     def.MergeDefinitions(definition);
+                }
+            }
 
             def.Sort();
             def.ProduceStringArrays(caret, currentFunctions);
@@ -340,8 +363,11 @@ namespace SourcepawnCondenser.SourcemodDefinition
             var nodeList = new List<ACNode>();
             var length = strings.Length;
             for (var i = 0; i < length; ++i)
+            {
                 nodeList.Add(
-                    new ACNode {Name = prefix + strings[i], EntryName = strings[i], IsExecuteable = Executable});
+                    new ACNode { Name = prefix + strings[i], EntryName = strings[i], IsExecuteable = Executable });
+            }
+
             return nodeList;
         }
 
@@ -362,8 +388,11 @@ namespace SourcepawnCondenser.SourcemodDefinition
             var nodeList = new List<ISNode>();
             var length = strings.Length;
             for (var i = 0; i < length; ++i)
+            {
                 nodeList.Add(
-                    new ISNode {Name = prefix + strings[i], EntryName = strings[i], IsExecuteable = Executable});
+                    new ISNode { Name = prefix + strings[i], EntryName = strings[i], IsExecuteable = Executable });
+            }
+
             return nodeList;
         }
 

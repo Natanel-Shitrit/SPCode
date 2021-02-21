@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using SpcodeUpdater.Properties;
+using SPCodeUpdater.Properties;
 
-namespace SpcodeUpdater
+namespace SPCodeUpdater
 {
     public partial class UpdateMarquee : Form
     {
@@ -21,7 +21,7 @@ namespace SpcodeUpdater
             UseWaitCursor = false;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Button1_Click(object sender, EventArgs e)
         {
             Close();
         }
